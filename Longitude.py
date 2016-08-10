@@ -176,4 +176,51 @@ class Longitude:
         return self.__add__(other)
 
     def __sub__(self, other):
-        pass
+        # sub of two longitudes
+        if type(other) == type(self):
+            value = float(self) - float(other)
+            sign = 'E' if value > 0 else 'W'
+            value = abs(value)
+            if value >= 180:
+                value = 360 - value
+                sign = 'E' if sign == 'W' else 'W'
+            return Longitude(degrees=value, sign=sign)
+
+        elif type(other) == tuple and 4 == len(other):
+            degs, mins, secs, sign = other
+            try:
+                degs = abs(float(degs))
+                mins = abs(float(mins))
+                secs = abs(float(secs))
+                sign = str(sign)
+            except ValueError as e:
+                e.message = 'the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)'
+                raise
+            return self.__sub__(Longitude(degs, mins, secs, sign))
+
+        else:
+            if type(other) == tuple:
+                raise TypeError('the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)')
+            else:
+                raise TypeError("Cannot subtract Longitude with {}".format(type(other)))
+
+    def __rsub__(self, other):
+        if type(other) == type(self):
+            return other.__sub__(self)
+        elif type(other) == tuple and 4 == len(other):
+            degs, mins, secs, sign = other
+            try:
+                degs = abs(float(degs))
+                mins = abs(float(mins))
+                secs = abs(float(secs))
+                sign = str(sign)
+            except ValueError as e:
+                e.message = 'the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)'
+                raise
+            return Longitude(degs, mins, secs, sign).__sub__(self)
+
+        else:
+            if type(other) == tuple:
+                raise TypeError('the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)')
+            else:
+                raise TypeError("Cannot subtract Longitude with {}".format(type(other)))
