@@ -250,19 +250,114 @@ class LongitudeDistance:
     To understand better the concept: the class answer at the Question:
     how many Degrees, minutes and seconds I must go to get from a to b?
     """
-    def __init__(self, a, b=None):
+    def __init__(self, a=(0, 0, 0, 'E'), b=None):
+        self.__dict__['degrees'] = 0.0
+        self.__dict__['minutes'] = 0.0
+        self.__dict__['seconds'] = 0.0
+        self.__dict__['sign'] = 'E'
         if type(a) == Longitude and type(b) == Longitude:
-            pass
+            value = float(b) - float(a)
+            self.sign = 'E' if value > 0 else 'W'
+            value = abs(value)
+            if value > 180:
+                value = 360 - value
+                self.sign = 'E' if 'W' == self.sign else 'E'
+            self.deg = int(value)
+
         elif type(a) == Longitude and type(b) == tuple:
-            pass
+            if len(b) != 4:
+                raise TypeError('the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)')
+            else:
+                try:
+                    b[0] = abs(float(b[0]))
+                    b[1] = abs(float(b[1]))
+                    b[2] = abs(float(b[2]))
+                    b[3] = str(b[3])
+                except ValueError as e:
+                    e.message = 'the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)'
+                    raise
+                else:
+                    b = b[0] + b[1] / 60 + b[2] / 3600 if 'E' == b[3] else (b[0] + b[1] / 60 + b[2] / 3600) * -1
+                    value = b - float(a)
+                    self.sign = 'E' if value > 0 else 'W'
+                    value = abs(value)
+                    if value > 180:
+                        value = 360 - value
+                        self.sign = 'E' if 'W' == self.sign else 'E'
+                    self.deg = int(value)
+
         elif type(a) == tuple and type(b) == Longitude:
-            pass
+            if len(a) != 4:
+                raise TypeError('the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)')
+            else:
+                try:
+                    a[0] = abs(float(a[0]))
+                    a[1] = abs(float(a[1]))
+                    a[2] = abs(float(a[2]))
+                    a[3] = str(b[3])
+                except ValueError as e:
+                    e.message = 'the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)'
+                    raise
+                else:
+                    a = a[0] + a[1] / 60 + a[2] / 3600 if 'E' == a[3] else (a[0] + a[1] / 60 + a[2] / 3600)*-1
+                    value = float(b) - a
+                    self.sign = 'E' if value > 0 else 'W'
+                    value = abs(value)
+                    if value > 180:
+                        value = 360 - value
+                        self.sign = 'E' if 'W' == self.sign else 'E'
+                    self.deg = int(value)
+
         elif type(a) == tuple and type(b) == tuple:
-            pass
+            if len(a) != 4 or len(b) != 4:
+                raise TypeError('the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)')
+            else:
+                try:
+                    a[0] = abs(float(a[0]))
+                    a[1] = abs(float(a[1]))
+                    a[2] = abs(float(a[2]))
+                    a[3] = str(b[3])
+                    b[0] = abs(float(b[0]))
+                    b[1] = abs(float(b[1]))
+                    b[2] = abs(float(b[2]))
+                    b[3] = str(b[3])
+                except ValueError as e:
+                    e.message = 'the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)'
+                    raise
+                else:
+                    a = a[0] + a[1] / 60 + a[2] / 3600 if 'E' == a[3] else (a[0] + a[1] / 60 + a[2] / 3600) * -1
+                    b = b[0] + b[1] / 60 + b[2] / 3600 if 'E' == b[3] else (b[0] + b[1] / 60 + b[2] / 3600) * -1
+                    value = b - a
+                    self.sign = 'E' if value > 0 else 'W'
+                    value = abs(value)
+                    if value > 180:
+                        value = 360 - value
+                        self.sign = 'E' if 'W' == self.sign else 'E'
+                    self.deg = int(value)
+
         elif type(a) == tuple and (b is None):
-            pass
+            if len(a) != 4:
+                raise TypeError('the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)')
+            else:
+                try:
+                    a[0] = abs(float(a[0]))
+                    a[1] = abs(float(a[1]))
+                    a[2] = abs(float(a[2]))
+                    a[3] = str(b[3])
+                except ValueError as e:
+                    e.message = 'the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)'
+                    raise
+                else:
+                    self.degrees = a[0]
+                    self.minutes = a[0]
+                    self.seconds = a[0]
+                    self.sign = a[3]
+
         else:
             raise TypeError("Cannot make a LongitudeDistance between {} and {}".format(type(a), type(b)))
+
+    def __setattr__(self, key, value):
+        pass  # to implement
 
 
 def floattolongitude(x: float = 0.0) -> Longitude:
