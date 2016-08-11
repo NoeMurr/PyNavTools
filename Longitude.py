@@ -224,3 +224,20 @@ class Longitude:
                 raise TypeError('the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)')
             else:
                 raise TypeError("Cannot subtract Longitude with {}".format(type(other)))
+
+
+class LongitudeDistance:
+    """
+    Class that represents the concept of longitude distance between two Longitudes.
+    To understand better the concept: the class answer at the Question:
+    how many Degrees, minutes and seconds I must go to get from longitudeA to longitudeB?
+    """
+    def __init__(self, longitudeA, longitudeB):
+        if type(longitudeA) == Longitude and type(longitudeB) == Longitude:
+            pass
+        elif type(longitudeA) == Longitude and type(longitudeB) == tuple:
+            pass
+        elif type(longitudeA) == tuple and type(longitudeB) == Longitude:
+            pass
+        elif type(longitudeA) == tuple and type(longitudeB) == tuple:
+            pass

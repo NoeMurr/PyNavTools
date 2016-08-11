@@ -11,7 +11,4 @@
 # math is necessary for navigation calculation.
 import math #@UnusedImport
 
-import RhumbLine
-
-
 
