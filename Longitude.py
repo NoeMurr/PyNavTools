@@ -6,6 +6,8 @@
 #
 ##############################################################################
 
+__author__ = "Noè Murr"
+
 
 class Longitude:
     """ Simple class representing the concept of Navigational longitude """
@@ -144,28 +146,35 @@ class Longitude:
         return value
 
     def __add__(self, other):
-        # sum of two longitudes
+        """
+        Method that permits to sum a longitude with a LongitudeDistance or a tuple like this: (deg, mins, secs, sign).
+        Cannot sum Longitude with Longitude because this operation has no graphical sense so to do an operation like
+        that you should cast the Longitudes type values in float values.
+        :param other: LongitudeDistance obj or tuple that will be interpreted like a LongitudeDistance obj
+        :return: Longitude type
+        """
         if type(other) == type(self):
-            value = float(self) + float(other)
-            sign = 'E' if value > 0 else 'W'
-            value = abs(value)
-            if value >= 180:
-                value = 360 - value
-                sign = 'E' if sign == 'W' else 'W'
-            return Longitude(degrees=value, sign=sign)
+            raise TypeError("Cannot sum Longitude with Longitude because"
+                            " this operation has no graphical sense so to do an operation like"
+                            " that you should cast the Longitudes type values in float values.")
 
         # sum with tuple of type (degs, mins, secs, sign)
         elif type(other) == tuple and 4 == len(other):
-            degs, mins, secs, sign = other
             try:
-                degs = abs(float(degs))
-                mins = abs(float(mins))
-                secs = abs(float(secs))
-                sign = str(sign)
+                other[0] = abs(float(other[0]))
+                other[1] = abs(float(other[1]))
+                other[2] = abs(float(other[2]))
+                other[3] = str(other[3])
             except ValueError as e:
                 e.message = 'the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)'
                 raise
-            return self.__add__(Longitude(degs, mins, secs, sign))
+            else:
+                other = LongitudeDistance(other)
+                return self.__add__(other)
+        elif type(other) == LongitudeDistance:
+            result = float(self) + float(other)
+            return floattolongitude(result)
+
         else:
             if type(other) == tuple:
                 raise TypeError('the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)')
@@ -176,27 +185,36 @@ class Longitude:
         return self.__add__(other)
 
     def __sub__(self, other):
+        """
+        Method that permits to subtract 'something' to a Longitude object, if other is another Longitude object
+        the method return an LongitudeDistance object containing the distance between other and self Longitudes
+        else if other is of type LongitudeDistance the method returns a Longitude value representing the meridian
+        that is at LongitudeDistance from self Longitude, else if other is a tuple like (degs, mins, secs, sign)
+        it is interpreted like a Longitude object so it's returned a LongitudeDistance object.
+        :param other: LongitudeDistance value or tuple like: (deg, mins, secs, sign).
+        :return: the LongitudeDistance between other and self longitudes
+        """
         # sub of two longitudes
         if type(other) == type(self):
-            value = float(self) - float(other)
-            sign = 'E' if value > 0 else 'W'
-            value = abs(value)
-            if value >= 180:
-                value = 360 - value
-                sign = 'E' if sign == 'W' else 'W'
-            return Longitude(degrees=value, sign=sign)
+            # the distance between other and self is returned because:
+            # if the user write lonDist = longB - longA he wants the distance between
+            # longA and longB (Mathematically it is what is obtained by this operation)
+            return LongitudeDistance(other, self)
 
         elif type(other) == tuple and 4 == len(other):
-            degs, mins, secs, sign = other
             try:
-                degs = abs(float(degs))
-                mins = abs(float(mins))
-                secs = abs(float(secs))
-                sign = str(sign)
+                other[0] = abs(float(other[0]))
+                other[1] = abs(float(other[1]))
+                other[2] = abs(float(other[2]))
+                other[3] = str(other[3])
             except ValueError as e:
                 e.message = 'the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)'
                 raise
-            return self.__sub__(Longitude(degs, mins, secs, sign))
+            return LongitudeDistance(Longitude(*other), self)
+
+        elif type(other) == LongitudeDistance:
+            result = float(self) - float(other)
+            return floattolongitude(result)
 
         else:
             if type(other) == tuple:
@@ -207,17 +225,17 @@ class Longitude:
     def __rsub__(self, other):
         if type(other) == type(self):
             return other.__sub__(self)
+
         elif type(other) == tuple and 4 == len(other):
-            degs, mins, secs, sign = other
             try:
-                degs = abs(float(degs))
-                mins = abs(float(mins))
-                secs = abs(float(secs))
-                sign = str(sign)
+                other[0] = abs(float(other[0]))
+                other[1] = abs(float(other[1]))
+                other[2] = abs(float(other[2]))
+                other[3] = str(other[3])
             except ValueError as e:
                 e.message = 'the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)'
                 raise
-            return Longitude(degs, mins, secs, sign).__sub__(self)
+            return Longitude(*other).__sub__(self)
 
         else:
             if type(other) == tuple:
@@ -230,14 +248,33 @@ class LongitudeDistance:
     """
     Class that represents the concept of longitude distance between two Longitudes.
     To understand better the concept: the class answer at the Question:
-    how many Degrees, minutes and seconds I must go to get from longitudeA to longitudeB?
+    how many Degrees, minutes and seconds I must go to get from a to b?
     """
-    def __init__(self, longitudeA, longitudeB):
-        if type(longitudeA) == Longitude and type(longitudeB) == Longitude:
+    def __init__(self, a, b=None):
+        if type(a) == Longitude and type(b) == Longitude:
             pass
-        elif type(longitudeA) == Longitude and type(longitudeB) == tuple:
+        elif type(a) == Longitude and type(b) == tuple:
             pass
-        elif type(longitudeA) == tuple and type(longitudeB) == Longitude:
+        elif type(a) == tuple and type(b) == Longitude:
             pass
-        elif type(longitudeA) == tuple and type(longitudeB) == tuple:
+        elif type(a) == tuple and type(b) == tuple:
             pass
+        elif type(a) == tuple and (b is None):
+            pass
+        else:
+            raise TypeError("Cannot make a LongitudeDistance between {} and {}".format(type(a), type(b)))
+
+
+def floattolongitude(x: float = 0.0) -> Longitude:
+    try:
+        x = float(x)
+    except ValueError as e:
+        e.message = "Cannot make a Longitude without a numerical value"
+        raise
+    else:
+        if x < 0:
+            sign = 'W'
+        else:
+            sign = 'E'
+
+        return Longitude(degrees=abs(x), sign=sign)
