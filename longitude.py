@@ -1,14 +1,12 @@
 ##############################################################################
 #
 # @author:  Noè Murr
-# @file:    Longitude.py
+# @file:    longitude.py
 # @brief:   contains the definition of Longitude class.
 #
 ##############################################################################
 
 import math
-
-__author__ = "Noè Murr"
 
 
 class Longitude:
