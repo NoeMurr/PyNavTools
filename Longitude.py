@@ -6,6 +6,8 @@
 #
 ##############################################################################
 
+import math
+
 __author__ = "Noè Murr"
 
 
@@ -37,32 +39,36 @@ class Longitude:
             try:
                 value = str(value)
             except ValueError as e:
-                e.message = "Sign must be a string E (East) or W (West)"
-                raise
+                raise ValueError("Sign must be a string E (East) or W (West)") from e
             else:
-                if value != 'E' and value != 'W':
-                    raise ValueError("Sign must be a string E (East) or W (West)")
-                else:
+                if "E" == value:
                     super().__setattr__(key, value)
+                elif "W" == value:
+                    super().__setattr__(key, value)
+                elif "E/W" == value:
+                    if 180 == self.degrees and 0 == self.minutes and 0 == self.seconds:
+                        super().__setattr__(key, value)
+                    else:
+                        raise ValueError("Sign must be a string E (East) or W (West)")
+                else:
+                    raise ValueError("Sign must be a string E (East) or W (West)")
 
         # checking degrees value
         elif "degrees" == key:
             try:
                 value = abs(float(value))
             except ValueError as e:
-                e.message = "degrees must be a numerical value"
-                raise
+                raise ValueError("degrees must be a numerical value") from e
             else:
                 if value > 180:
                     raise ValueError("Longitude cannot be greater than 180 degrees")
                 elif 180 == value and (self.minutes > 0 or self.seconds > 0):
                     raise ValueError("Longitude cannot be greater than 180 degrees")
                 else:
-                    deg = float(int(value))
-                    minutes = self.minutes + ((value - int(value)) * 60)
+                    deg, frac = math.modf(value)
+                    minutes, frac = math.modf(self.minutes + (frac * 60))
 
-                    sec = self.seconds + ((minutes - int(minutes)) * 60)
-                    minutes = float(int(minutes))
+                    sec = self.seconds + (frac * 60)
 
                     minutes += sec // 60
                     sec %= 60
@@ -82,13 +88,13 @@ class Longitude:
             try:
                 value = abs(float(value))
             except ValueError as e:
-                e.message = "minutes must be a numerical value"
-                raise
+                raise ValueError("minutes must be a numerical value") from e
             else:
-                mins = float(int(value))
-                secs = self.seconds + ((mins - int(mins)) * 60)
+                degs = self.degrees
+                mins, frac = math.modf(value)
+                secs = self.seconds + (frac * 60)
 
-                if secs > 60:
+                if secs >= 60:
                     mins += secs // 60
                     secs %= 60
 
@@ -96,41 +102,35 @@ class Longitude:
                     degs = self.degrees + (mins // 60)
                     mins %= 60
 
-                    if degs > 180 or (180 == degs and (mins > 0 or secs > 0)):
-                        raise ValueError("Longitude cannot be greater than 180 degrees")
-                    else:
-                        super().__setattr__('degrees', degs)
-
-                super().__setattr__('minutes', mins)
-                super().__setattr__('seconds', secs)
+                if degs > 180 or (180 == degs and (mins > 0 or secs > 0)):
+                    raise ValueError("Longitude cannot be greater than 180 degrees")
+                else:
+                    super().__setattr__('degrees', degs)
+                    super().__setattr__('minutes', mins)
+                    super().__setattr__('seconds', secs)
 
         # checking minutes value
         elif "seconds" == key:
             try:
                 value = abs(float(value))
             except ValueError as e:
-                e.message = "seconds must be a numerical value"
-                raise
+                raise ValueError("seconds must be a numerical value") from e
             else:
-                if value > 60:
+                degs = self.degrees
+                mins = self.minutes
+                if value >= 60:
                     mins = self.minutes + (value // 60)
                     value %= 60
 
-                    if mins > 60:
+                    if mins >= 60:
                         degs = self.degrees + (mins // 60)
                         mins %= 60
 
-                        if degs > 180 or (180 == degs and (mins > 0 or value > 0)):
-                            raise ValueError("Longitude cannot be greater than 180 degrees")
-                        else:
-                            super().__setattr__('degrees', degs)
-                            super().__setattr__('minutes', mins)
-                            super().__setattr__('seconds', value)
-
-                    else:
-                        super().__setattr__('minutes', mins)
-                        super().__setattr__('seconds', value)
+                if degs > 180 or (180 == degs and (mins > 0 or value > 0)):
+                    raise ValueError("Longitude cannot be greater than 180 degrees")
                 else:
+                    super().__setattr__('degrees', degs)
+                    super().__setattr__('minutes', mins)
                     super().__setattr__('seconds', value)
 
         # if I don't care about the value I'll set it
@@ -138,7 +138,12 @@ class Longitude:
             super().__setattr__(key, value)
 
     def __str__(self):
-        return "{}° {}' {}\" {}".format(int(self.degrees), int(self.minutes), int(self.seconds), self.sign)
+        if 180 == self.degrees and 0 == self.minutes and 0 == self.seconds:
+            return "{}° {}' {}\" {}".format(int(self.degrees), int(self.minutes), int(self.seconds), 'E/W')
+        elif 0 == self.degrees and 0 == self.minutes and 0 == self.seconds:
+            return "{}° {}' {}\" {}".format(int(self.degrees), int(self.minutes), int(self.seconds), 'E/W')
+        else:
+            return "{}° {}' {}\" {}".format(int(self.degrees), int(self.minutes), int(self.seconds), self.sign)
 
     def __float__(self):
         value = self.degrees + (self.minutes/60) + (self.seconds / 3600)
@@ -161,16 +166,15 @@ class Longitude:
         # sum with tuple of type (degs, mins, secs, sign)
         elif type(other) == tuple and 4 == len(other):
             try:
-                # TODO divide it in more variables, cannot assign tuple Items
-                other[0] = abs(float(other[0]))
-                other[1] = abs(float(other[1]))
-                other[2] = abs(float(other[2]))
-                other[3] = str(other[3])
+                a = abs(float(other[0]))
+                b = abs(float(other[1]))
+                c = abs(float(other[2]))
+                d = str(other[3])
             except ValueError as e:
-                e.message = 'the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)'
-                raise
+                raise ValueError('the tuple must be like: '
+                                 '(degrees: float, minutes: float, seconds: float, sign: str)') from e
             else:
-                other = LongitudeDistance(other)
+                other = LongitudeDistance((a, b, c, d))
                 return self.__add__(other)
         elif type(other) == LongitudeDistance:
             result = float(self) + float(other)
@@ -204,15 +208,14 @@ class Longitude:
 
         elif type(other) == tuple and 4 == len(other):
             try:
-                # TODO divide it in more variables, cannot assign tuple Items
-                other[0] = abs(float(other[0]))
-                other[1] = abs(float(other[1]))
-                other[2] = abs(float(other[2]))
-                other[3] = str(other[3])
+                a = abs(float(other[0]))
+                b = abs(float(other[1]))
+                c = abs(float(other[2]))
+                d = str(other[3])
             except ValueError as e:
-                e.message = 'the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)'
-                raise
-            return LongitudeDistance(Longitude(*other), self)
+                raise ValueError('the tuple must be like:'
+                                 ' (degrees: float, minutes: float, seconds: float, sign: str)') from e
+            return LongitudeDistance(Longitude(a, b, c, d), self)
 
         elif type(other) == LongitudeDistance:
             result = float(self) - float(other)
@@ -230,15 +233,14 @@ class Longitude:
 
         elif type(other) == tuple and 4 == len(other):
             try:
-                # TODO divide it in more variables, cannot assign tuple Items
-                other[0] = abs(float(other[0]))
-                other[1] = abs(float(other[1]))
-                other[2] = abs(float(other[2]))
-                other[3] = str(other[3])
+                a = abs(float(other[0]))
+                b = abs(float(other[1]))
+                c = abs(float(other[2]))
+                d = str(other[3])
             except ValueError as e:
-                e.message = 'the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)'
-                raise
-            return Longitude(*other).__sub__(self)
+                raise ValueError('the tuple must be like:'
+                                 ' (degrees: float, minutes: float, seconds: float, sign: str)') from e
+            return Longitude(a, b, c, d).__sub__(self)
 
         else:
             if type(other) == tuple:
@@ -272,16 +274,15 @@ class LongitudeDistance:
                 raise TypeError('the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)')
             else:
                 try:
-                    # TODO divide it in more variables, cannot assign tuple Items
-                    b[0] = abs(float(b[0]))
-                    b[1] = abs(float(b[1]))
-                    b[2] = abs(float(b[2]))
-                    b[3] = str(b[3])
+                    deg = abs(float(b[0]))
+                    mins = abs(float(b[1]))
+                    sec = abs(float(b[2]))
+                    sign = str(b[3])
                 except ValueError as e:
-                    e.message = 'the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)'
-                    raise
+                    raise ValueError('the tuple must be like:'
+                                     ' (degrees: float, minutes: float, seconds: float, sign: str)') from e
                 else:
-                    b = b[0] + b[1] / 60 + b[2] / 3600 if 'E' == b[3] else (b[0] + b[1] / 60 + b[2] / 3600) * -1
+                    b = deg + mins / 60 + sec / 3600 if 'E' == sign else (deg + mins / 60 + sec / 3600) * -1
                     value = b - float(a)
                     self.sign = 'E' if value > 0 else 'W'
                     value = abs(value)
@@ -295,16 +296,15 @@ class LongitudeDistance:
                 raise TypeError('the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)')
             else:
                 try:
-                    # TODO divide it in more variables, cannot assign tuple Items
-                    a[0] = abs(float(a[0]))
-                    a[1] = abs(float(a[1]))
-                    a[2] = abs(float(a[2]))
-                    a[3] = str(b[3])
+                    deg = abs(float(a[0]))
+                    mins = abs(float(a[1]))
+                    sec = abs(float(a[2]))
+                    sign = str(b[3])
                 except ValueError as e:
-                    e.message = 'the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)'
-                    raise
+                    raise ValueError('the tuple must be like: '
+                                     '(degrees: float, minutes: float, seconds: float, sign: str)') from e
                 else:
-                    a = a[0] + a[1] / 60 + a[2] / 3600 if 'E' == a[3] else (a[0] + a[1] / 60 + a[2] / 3600)*-1
+                    a = deg + mins / 60 + sec / 3600 if 'E' == sign else (deg + mins / 60 + sec / 3600)*-1
                     value = float(b) - a
                     self.sign = 'E' if value > 0 else 'W'
                     value = abs(value)
@@ -318,21 +318,20 @@ class LongitudeDistance:
                 raise TypeError('the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)')
             else:
                 try:
-                    # TODO divide it in more variables, cannot assign tuple Items
-                    a[0] = abs(float(a[0]))
-                    a[1] = abs(float(a[1]))
-                    a[2] = abs(float(a[2]))
-                    a[3] = str(b[3])
-                    b[0] = abs(float(b[0]))
-                    b[1] = abs(float(b[1]))
-                    b[2] = abs(float(b[2]))
-                    b[3] = str(b[3])
+                    aDeg = abs(float(a[0]))
+                    aMin = abs(float(a[1]))
+                    aSec = abs(float(a[2]))
+                    aSign = str(b[3])
+                    bDeg = abs(float(b[0]))
+                    bMin = abs(float(b[1]))
+                    bSec = abs(float(b[2]))
+                    bSign = str(b[3])
                 except ValueError as e:
-                    e.message = 'the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)'
-                    raise
+                    raise ValueError('the tuple must be like: '
+                                     '(degrees: float, minutes: float, seconds: float, sign: str)') from e
                 else:
-                    a = a[0] + a[1] / 60 + a[2] / 3600 if 'E' == a[3] else (a[0] + a[1] / 60 + a[2] / 3600) * -1
-                    b = b[0] + b[1] / 60 + b[2] / 3600 if 'E' == b[3] else (b[0] + b[1] / 60 + b[2] / 3600) * -1
+                    a = aDeg + aMin / 60 + aSec / 3600 if 'E' == aSign else (aDeg + aMin / 60 + aSec / 3600) * -1
+                    b = bDeg + bMin / 60 + bSec / 3600 if 'E' == bSign else (bDeg + bMin / 60 + bSec / 3600) * -1
                     value = b - a
                     self.sign = 'E' if value > 0 else 'W'
                     value = abs(value)
@@ -346,19 +345,18 @@ class LongitudeDistance:
                 raise TypeError('the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)')
             else:
                 try:
-                    # TODO divide it in more variables, cannot assign tuple Items
-                    a[0] = abs(float(a[0]))
-                    a[1] = abs(float(a[1]))
-                    a[2] = abs(float(a[2]))
-                    a[3] = str(b[3])
+                    deg = abs(float(a[0]))
+                    mins = abs(float(a[1]))
+                    sec = abs(float(a[2]))
+                    sign = str(a[3])
                 except ValueError as e:
-                    e.message = 'the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)'
-                    raise
+                    raise ValueError('the tuple must be like:'
+                                     ' (degrees: float, minutes: float, seconds: float, sign: str)') from e
                 else:
-                    self.degrees = a[0]
-                    self.minutes = a[0]
-                    self.seconds = a[0]
-                    self.sign = a[3]
+                    self.degrees = deg
+                    self.minutes = mins
+                    self.seconds = sec
+                    self.sign = sign
 
         else:
             raise TypeError("Cannot make a LongitudeDistance between {} and {}".format(type(a), type(b)))
@@ -369,8 +367,7 @@ class LongitudeDistance:
             try:
                 value = str(value)
             except ValueError as e:
-                e.message = "Sign must be a string E (East) or W (West)"
-                raise
+                raise ValueError("Sign must be a string E (East) or W (West)") from e
             else:
                 if value != 'E' and value != 'W':
                     raise ValueError("Sign must be a string E (East) or W (West)")
@@ -381,8 +378,7 @@ class LongitudeDistance:
             try:
                 value = abs(float(value))
             except ValueError as e:
-                e.message = "degrees must be a numerical value"
-                raise
+                raise ValueError("degrees must be a numerical value") from e
             else:
                 value %= 360
                 if 360 == value and (self.minutes > 0 or self.seconds > 0):
@@ -392,11 +388,10 @@ class LongitudeDistance:
                     super().__setattr__("minutes", float(int((value - self.degrees) * 60)))
                     super().__setattr__("seconds", float((((value - self.degrees) * 60) - self.minutes) * 60))
                 else:
-                    deg = float(int(value))
-                    minutes = self.minutes + ((value - int(value)) * 60)
+                    deg, frac = math.modf(value)
+                    minutes, frac = math.modf(self.minutes + (frac * 60))
 
-                    sec = self.seconds + ((minutes - int(minutes)) * 60)
-                    minutes = float(int(minutes))
+                    sec = self.seconds + (frac * 60)
 
                     minutes += sec // 60
                     sec %= 60
@@ -419,11 +414,10 @@ class LongitudeDistance:
             try:
                 value = abs(float(value))
             except ValueError as e:
-                e.message = "minutes must be a numerical value"
-                raise
+                raise ValueError("minutes must be a numerical value") from e
             else:
-                mins = float(int(value))
-                secs = self.seconds + ((mins - int(mins)) * 60)
+                mins, frac = math.modf(value)
+                secs = self.seconds + (frac * 60)
                 degs = self.degrees
                 if secs > 60:
                     mins += secs // 60
@@ -433,58 +427,140 @@ class LongitudeDistance:
                     degs = self.degrees + (mins // 60)
                     mins %= 60
 
-                    if degs > 360 or (360 == degs and (mins > 0 or secs > 0)):
-                        value = degs + mins / 60 + secs / 3600
-                        value = 360 - value
-                        degs = float(int(value))
-                        mins = float(int((value - degs) * 60))
-                        secs = float((((value - degs) * 60) - mins) * 60)
+                if degs > 360 or (360 == degs and (mins > 0 or secs > 0)):
+                    value = degs + mins / 60 + secs / 3600
+                    value = 360 - value
+                    degs, frac = math.modf(value)
+                    mins, frac = math.modf(frac * 60)
+                    secs = frac * 60
 
                 super().__setattr__('degrees', degs)
                 super().__setattr__('minutes', mins)
                 super().__setattr__('seconds', secs)
 
         elif "seconds" == key:
-            secs = float(int(value))
-            mins = self.minutes
-            degs = self.degrees
-            if secs > 60:
-                mins = self.minutes + (value // 60)
-                secs %= 60
+            try:
+                secs = abs(float(value))
+            except ValueError as e:
+                raise ValueError("seconds must be a numerical value") from e
+            else:
+                mins = self.minutes
+                degs = self.degrees
+                if secs > 60:
+                    mins = self.minutes + (value // 60)
+                    secs %= 60
 
                 if mins > 60:
                     degs = self.degrees + (mins // 60)
                     mins %= 60
 
-                    if degs > 360 or (360 == degs and (mins > 0 or secs > 0)):
-                        value = degs + mins / 60 + secs / 3600
-                        value = 360 - value
-                        degs = float(int(value))
-                        mins = float(int((value - degs) * 60))
-                        secs = float((((value - degs) * 60) - mins) * 60)
+                if degs > 360 or (360 == degs and (mins > 0 or secs > 0)):
+                    value = degs + mins / 60 + secs / 3600
+                    value = 360 - value
+                    degs, frac = math.modf(value)
+                    mins, frac = math.modf(frac * 60)
+                    secs = frac * 60
 
-            super().__setattr__('degrees', degs)
-            super().__setattr__('minutes', mins)
-            super().__setattr__('seconds', secs)
+                super().__setattr__('degrees', degs)
+                super().__setattr__('minutes', mins)
+                super().__setattr__('seconds', secs)
 
         else:
             super().__setattr__(key, value)
 
     def __add__(self, other):
-        pass
-        # TODO complete the __add__ method
+        """
+        Method that permits to sum the object LongitudeDistance with an object of Longitude or LongitudeDistance or
+        a tuple of type (degrees, minutes, seconds, sign). In every case the method returns a LongitudeDistance value
+        :param other: LongitudeDistance obj or tuple that will be interpreted like a LongitudeDistance obj
+        :return: Longitude type
+        """
+        if type(other) == type(self):
+            a = float(self)
+            b = float(other)
+            value = a + b
+
+            return floattolongitudedistance(value)
+
+        elif type(other) == tuple:
+            if len(other) == 4:
+                try:
+                    deg = float(other[0])
+                    mins = float(other[1])
+                    secs = float(other[2])
+                    sign = str(other[3])
+                except ValueError as e:
+                    raise ValueError('tuple must be of type (degrees, minutes, seconds, sign)') from e
+                else:
+                    if sign == 'E' or sign == 'W':
+                        a = float(self)
+                        b = deg + mins/60 + secs/ 3600 if 'E' == sign else (deg + mins/60 + secs/ 3600) * -1
+
+                        return floattolongitudedistance(a+b)
+                    else:
+                        raise ValueError('sign of tuple must be E or W')
+            else:
+                raise ValueError('tuple must be of type (degrees, minutes, seconds, sign)')
+
+        elif type(other) == Longitude:
+            a = float(self)
+            b = float(other)
+            value = a + b
+
+            return floattolongitudedistance(value)
+
+        else:
+            raise TypeError("cannot sum {} with {}".format(type(self), type(other)))
 
     def __radd__(self, other):
-        pass
-        # TODO complete the __radd__ method
+        return self.__add__(other)
 
     def __sub__(self, other):
-        pass
-        # TODO complete the __sub__ method
+        """
+        Method that permits to subtract a Longitude or LongitudeDistance or tuple object to self object.
+        the returned type is always a LongitudeDistance object.
+        :param other: Longitude or LongitudeDistance or tuple object
+        :return: LongitudeDistance object
+        """
+        if type(other) == type(self):
+            a = float(self)
+            b = float(other)
+            return floattolongitudedistance(a-b)
+
+        elif type(other) == tuple:
+            if len(other) == 4:
+                try:
+                    deg = float(other[0])
+                    mins = float(other[1])
+                    secs = float(other[2])
+                    sign = str(other[3])
+                except ValueError as e:
+                    raise ValueError('tuple must be of type (degrees, minutes, seconds, sign)') from e
+                else:
+                    a = float(self)
+                    b = deg + mins / 60 + secs / 3600 if 'E' == sign else (deg + mins / 60 + secs / 3600) * -1
+
+                    return floattolongitudedistance(a - b)
+            else:
+                raise ValueError('tuple must be like (degrees, minutes, seconds,sign)')
+
+        elif type(other) == Longitude:
+            a = float(self)
+            b = float(other)
+
+            return floattolongitudedistance(a-b)
+
+        else:
+            raise TypeError("cannot sub {} with {}".format(type(self), type(other)))
 
     def __rsub__(self, other):
-        pass
-        # TODO complete the __rsub__ method
+        if type(other) == tuple and len(other) != 4:
+            b = self
+            a = LongitudeDistance(other)
+
+            return a - b
+        else:
+            raise TypeError("cannot rsub {} with {}".format(type(self), type(other)))
 
     def __str__(self):
         return "{}° {}' {}\" {}".format(int(self.degrees), int(self.minutes), int(self.seconds), self.sign)
@@ -499,8 +575,7 @@ def floattolongitude(x: float = 0.0) -> Longitude:
     try:
         x = float(x)
     except ValueError as e:
-        e.message = "Cannot make a Longitude without a numerical value"
-        raise
+        raise ValueError("Cannot make a Longitude without a numerical value") from e
     else:
         if x < 0:
             sign = 'W'
@@ -508,3 +583,16 @@ def floattolongitude(x: float = 0.0) -> Longitude:
             sign = 'E'
 
         return Longitude(degrees=abs(x), sign=sign)
+
+
+def floattolongitudedistance(x: float = 0.0) -> LongitudeDistance:
+    try:
+        x = float(x)
+    except ValueError as e:
+        raise ValueError("Cannot make a LongitudeDistance without a numerical value") from e
+    else:
+        if x < 0:
+            sign = 'W'
+        else:
+            sign = 'E'
+        return LongitudeDistance((x, 0, 0, sign))
