@@ -155,7 +155,7 @@ class Latitude:
                 raise ValueError('the tuple must be like: '
                                  '(degrees: float, minutes: float, seconds: float, sign: str)') from e
             else:
-                other = LatitudeDistance(a, b, c, d)
+                other = LatitudeDistance((a, b, c, d))
                 return self.__add__(other)
 
         elif type(other) == LatitudeDistance:
@@ -168,42 +168,59 @@ class Latitude:
         return self.__add__(other)
 
     def __sub__(self, other):
-        pass  # TODO define the __sub__ method
+        """
+        Method that permits to subtract 'something' to a Latitude object, if other is another Latitude object
+        the method returns a LatitudeDistance object containing the distance between other and self Latitudes
+        else if other is of type LatitudeDistance the method returns a Latitude value representing the parallel
+        that is at LatitudeDistance from self Latitude, else if other is a tuple like (degs, mins, secs, sign)
+        it is interpreted like a Latitude object so it's returned a LatitudeDistance object.
+        :param other: LatitudeDistance value or tuple like: (deg, mins, secs, sign).
+        :return: the LatitudeDistance between other and self longitudes
+        """
+        if type(other) == type(self):
+            # the distance between other and self is returned because:
+            # if the user write lonDist = longB - longA he wants the distance between
+            # longA and longB (Mathematically it is what is obtained by this operation)
+            return LatitudeDistance(other, self)
+
+        elif type(other) == tuple:
+            if len(other) == 4:
+                try:
+                    a = float(other[0])
+                    b = float(other[1])
+                    c = float(other[2])
+                    d = str(other[3])
+                except ValueError as e:
+                    raise ValueError('tuple must be of type (degrees, minutes, seconds, sign)') from e
+                else:
+                    return LatitudeDistance(Latitude(a, b, c, d), self)
+            else:
+                raise ValueError('tuple must be like (degrees, minutes, seconds,sign)')
+
+        elif type(other) == LatitudeDistance:
+            a = float(self)
+            b = float(other)
+            return floattolatitude(a-b)
+
+        else:
+            raise TypeError("cannot sub {} with {}".format(type(self), type(other)))
 
     def __rsub__(self, other):
-        pass  # TODO define the __rsub__ method
+        if type(other) == tuple and len(other) != 4:
+            b = self
+            a = LatitudeDistance(other)
+            return a - b
+
+        else:
+            raise TypeError("cannot rsub {} with {}".format(type(self), type(other)))
 
 
 class LatitudeDistance:
-    def __init__(self, degrees=0.0, minutes: float = 0.0, seconds: float = 0.0, sign: str = 'N'):
-        """ Constructor for the class
-        :type degrees:  float
-        :type minutes:  float
-        :type seconds:  float
-        :type sign:     str
-        """
-
-        self.__dict__['degrees'] = 0.0
-        self.__dict__['minutes'] = 0.0
-        self.__dict__['seconds'] = 0.0
-        self.sign = sign
-
-        self.degrees = degrees
-        self.minutes = minutes
-        self.seconds = seconds
+    def __init__(self,  a=(0, 0, 0, 'E'), b=None):
+        pass
 
     def __setattr__(self, key, value):
-        # TODO implements __setattr__ method
-        if 'sign' == key:
-            pass
-        elif 'degrees' == key:
-            pass
-        elif 'minutes' == key:
-            pass
-        elif 'seconds' == key:
-            pass
-        else:
-            super().__setattr__(key, value)
+        pass
 
     def __str__(self):
         pass  # TODO define the __str__ method
@@ -243,4 +260,4 @@ def floattolatitudedistance(value: float = 0.0) -> LatitudeDistance:
     else:
         sign = 'N' if value >= 0 else 'S'
 
-        return LatitudeDistance(degrees=abs(value), sign=sign)
+        return LatitudeDistance((value, 0, 0, sign))

@@ -221,10 +221,7 @@ class Longitude:
                 raise TypeError("Cannot subtract Longitude with {}".format(type(other)))
 
     def __rsub__(self, other):
-        if type(other) == type(self):
-            return other.__sub__(self)
-
-        elif type(other) == tuple and 4 == len(other):
+        if type(other) == tuple and 4 == len(other):
             try:
                 a = abs(float(other[0]))
                 b = abs(float(other[1]))
