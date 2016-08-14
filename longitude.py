@@ -43,11 +43,6 @@ class Longitude:
                     super().__setattr__(key, value)
                 elif "W" == value:
                     super().__setattr__(key, value)
-                elif "E/W" == value:
-                    if 180 == self.degrees and 0 == self.minutes and 0 == self.seconds:
-                        super().__setattr__(key, value)
-                    else:
-                        raise ValueError("Sign must be a string E (East) or W (West)")
                 else:
                     raise ValueError("Sign must be a string E (East) or W (West)")
 
