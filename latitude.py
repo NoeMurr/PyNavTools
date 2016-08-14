@@ -269,25 +269,174 @@ class LatitudeDistance:
             raise TypeError("Cannot make a LatitudeDistance between {} and {}".format(type(a), type(b)))
 
     def __setattr__(self, key, value):
-        pass
+        if 'sign' == key:
+            try:
+                value = str(value)
+            except ValueError as e:
+                raise ValueError("Sign must be a string N North or S South") from e
+            else:
+                if value != 'N' and value != 'S':
+                    raise ValueError("Sign must be a string N North or S South")
+                else:
+                    super().__setattr__(key, value)
+
+        elif 'degrees' == key:
+            try:
+                value = abs(float(value))
+            except ValueError as e:
+                raise ValueError("degrees must be a numerical value") from e
+            else:
+                if value > 180:
+                    raise ValueError('Latitude distance cannot be greater than 180 degrees')
+                elif 180 == value and (self.minutes > 0 or self.seconds > 0):
+                    raise ValueError('Latitude distance cannot be greater than 180 degrees')
+                else:
+                    deg, frac = math.modf(value)
+                    mins, frac = math.modf(self.minutes + (frac * 60))
+                    sec = self.seconds + (frac * 60)
+
+                    mins += sec // 60
+                    sec %= 60
+
+                    deg += mins // 60
+                    mins %= 60
+
+                    if deg > 180 or (180 == deg and (mins > 0 or sec > 0)):
+                        raise ValueError('Latitude distance cannot be greater than 180 degrees')
+                    else:
+                        super().__setattr__('degrees', deg)
+                        super().__setattr__('minutes', mins)
+                        super().__setattr__('seconds', sec)
+
+        elif 'minutes' == key:
+            try:
+                value = abs(float(value))
+            except ValueError as e:
+                raise ValueError("minutes must be a numerical value") from e
+            else:
+                mins, frac = math.modf(value)
+                secs = self.seconds + (frac * 60)
+                degs = self.degrees
+
+                if secs > 60:
+                    mins += secs // 60
+                    secs %= 60
+
+                if mins >= 60:
+                    degs = self.degrees + (mins // 60)
+                    mins %= 60
+
+                if degs > 180 or (180 == degs and (mins > 0 or secs > 0)):
+                    raise ValueError('Latitude distance cannot be greater than 180 degrees')
+                else:
+                    super().__setattr__('degrees', degs)
+                    super().__setattr__('minutes', mins)
+                    super().__setattr__('seconds', secs)
+
+        elif 'seconds' == key:
+            try:
+                secs = abs(float(value))
+            except ValueError as e:
+                raise ValueError("seconds must be a numerical value") from e
+            else:
+                mins = self.minutes
+                degs = self.degrees
+                if secs > 60:
+                    mins = self.minutes + (value // 60)
+                    secs %= 60
+
+                if mins > 60:
+                    degs = self.degrees + (mins // 60)
+                    mins %= 60
+
+                if degs > 180 or (180 == degs and (mins > 0 or secs > 0)):
+                    raise ValueError('Latitude distance cannot be greater than 180 degrees')
+                else:
+                    super().__setattr__('degrees', degs)
+                    super().__setattr__('minutes', mins)
+                    super().__setattr__('seconds', secs)
+
+        else:
+            super().__setattr__(key, value)
 
     def __str__(self):
-        pass  # TODO define the __str__ method
+        if 0 == self.degrees and 0 == self.minutes and 0 == self.seconds:
+            return '{}° {}\' {}" {}'.format(self.degrees, self.minutes, self.seconds, 'N/S')
+        else:
+            return '{}° {}\' {}" {}'.format(self.degrees, self.minutes, self.seconds, self.sign)
 
     def __float__(self):
-        pass  # TODO define the __float__ method
+        value = self.degrees + (self.minutes / 60) + (self.seconds / 3600)
+        return value if self.sign == 'E' else value * -1
 
     def __add__(self, other):
-        pass  # TODO define the __add__ method
+        """
+        Method that permits to sum a LatitudeDistance with Latitude, LatitudeDistance or tuple like (degrees, minutes
+        seconds, sign). Methods returns always a LatitudeDistance object
+        :param other: LatitudeDistance obj or tuple that will be interpreted like a LatitudeDistance obj
+        :return: LatitudeDistance type
+        """
+        if type(self) == type(other):
+            return floattolatitudedistance(float(other) + float(self))
+
+        elif type(other) == Latitude:
+            return floattolatitudedistance(float(other) + float(self))
+
+        elif type(other) == tuple:
+            if len(other) != 4:
+                raise TypeError('tuple must be like (degrees, minutes, seconds, sing)')
+            else:
+                try:
+                    a, b, c, d = abs(float(other[0])), abs(float(other[1])), abs(float(other[2])), str(other[3])
+                except (ValueError, IndexError) as e:
+                    raise ValueError('tuple must be like (degrees, minutes, seconds, sing)') from e
+                else:
+                    if d != 'N' and d != 'S':
+                        raise ValueError('Sign must be N north or S south')
+                    other = a + b / 60 + c / 3600 if 'N' == d else (a + b / 60 + c / 3600) * -1
+                    return floattolatitudedistance(float(self) + other)
 
     def __radd__(self, other):
-        pass  # TODO define the __radd__ method
+        return self.__add__(other)
 
     def __sub__(self, other):
-        pass  # TODO define the __sub__ method
+        """
+        Method that permits to subtract Latitude or LatitudeDistance or tuple of type (degrees, minutes, secons, sign)
+        to self obj.
+        :param other: Latitude or LatitudeDistance or tuple object
+        :return: LatitudeDistance object
+        """
+        if type(other) == type(self):
+            return floattolatitudedistance(float(self) - float(other))
+
+        elif type(other) == Latitude:
+            return floattolatitudedistance(float(self) - float(other))
+
+        elif type(other) == tuple:
+            if len(other) != 4:
+                raise TypeError('tuple must be like (degrees, minutes, seconds, sing)')
+            else:
+                try:
+                    a, b, c, d = abs(float(other[0])), abs(float(other[1])), abs(float(other[2])), str(other[3])
+                except (ValueError, IndexError) as e:
+                    raise ValueError('tuple must be like (degrees, minutes, seconds, sing)') from e
+                else:
+                    if d != 'N' and d != 'S':
+                        raise ValueError('Sign must be N north or S south')
+                    other = a + b / 60 + c / 3600 if 'N' == d else (a + b / 60 + c / 3600) * -1
+                    return floattolatitudedistance(float(self) - other)
 
     def __rsub__(self, other):
-        pass  # TODO define the __rsub__ method
+        if type(other) == tuple:
+            if len(other) != 4:
+                raise TypeError('tuple must be like (degrees, minutes, seconds, sing)')
+            else:
+                try:
+                    a, b, c, d = abs(float(other[0])), abs(float(other[1])), abs(float(other[2])), str(other[3])
+                except (ValueError, IndexError) as e:
+                    raise ValueError('tuple must be like (degrees, minutes, seconds, sing)') from e
+                else:
+                    return LatitudeDistance((a, b, c, d)).__sub__(self)
 
 
 def floattolatitude(value: float = 0.0) -> Latitude:
