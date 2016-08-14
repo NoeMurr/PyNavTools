@@ -9,45 +9,64 @@
 
 class Latitude:
 
-    def __init__(self, degrees, minutes, seconds, sign):
-        # checking sign
-        try:
-            sign = str(sign)
-        except ValueError:
-            raise ValueError("Sign must be a string N (North) or S")
+    def __init__(self, degrees: float = 0.0, minutes: float = 0.0, seconds: float = 0.0, sign: str = 'N'):
+        """ Constructor for the class
+        :type degrees:  float
+        :type minutes:  float
+        :type seconds:  float
+        :type sign:     str
+        """
+
+        self.__dict__['degrees'] = 0.0
+        self.__dict__['minutes'] = 0.0
+        self.__dict__['seconds'] = 0.0
+        self.sign = sign
+
+        self.degrees = degrees
+        self.minutes = minutes
+        self.seconds = seconds
+
+    def __setattr__(self, key, value):
+        if 'sign' == key:
+            pass
+        elif 'degrees' == key:
+            pass
+        elif 'minutes' == key:
+            pass
+        elif 'seconds' == key:
+            pass
         else:
-            if str(sign) != 'N' or str(sign) != 'S':
-                raise ValueError("Sign must be N (North) or S")
-            else:
-                self.sign = sign
+            super().__setattr__(key, value)
 
-        # checking degrees
-        try:
-            degrees = abs(float(degrees))
-            minutes = abs(float(minutes))
-            seconds = abs(float(seconds))
-        except ValueError:
-            raise ValueError("Degrees, minutes and seconds must be numerical value")
-        else:
-            # first check
-            self.degrees = int(degrees)
-            minutes += (degrees - int(degrees)) * 60
+    def __str__(self):
+        pass  # TODO define the __str__ method
 
-            self.minutes = int(minutes)
-            seconds += (minutes - int(minutes)) * 60
+    def __float__(self):
+        pass  # TODO define the __float__ method
 
-            self.seconds = seconds
+    def __add__(self, other):
+        pass  # TODO define the __add__ method
 
-            # second check
-            if self.seconds >= 60:
-                self.minutes += self.seconds // 60
-                self.seconds %= 60
+    def __radd__(self, other):
+        pass  # TODO define the __radd__ method
 
-            if self.minutes >= 60:
-                self.degrees += self.minutes // 60
-                self.minutes %= 60
+    def __sub__(self, other):
+        pass  # TODO define the __sub__ method
 
-            if self.degrees > 90:
-                raise ValueError("Latitude cannot be greater than 90 degrees")
-            elif self.degrees == 90 and self.minutes != 0 and self.seconds != 0:
-                raise ValueError("Latitude cannot be greater than 90 degrees")
+    def __rsub__(self, other):
+        pass  # TODO define the __rsub__ method
+
+
+class LatitudeDistance:
+    pass
+
+
+def floattolatitude(value: float = 0.0) -> Latitude:
+    try:
+        value = float(value)
+    except ValueError as e:
+        raise ValueError('value must be a numerical value') from e
+    else:
+        sign = 'N' if value >= 0 else 'S'
+
+        return Latitude(degrees=abs(value), sign=sign)

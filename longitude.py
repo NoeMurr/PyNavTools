@@ -316,20 +316,20 @@ class LongitudeDistance:
                 raise TypeError('the tuple must be like: (degrees: float, minutes: float, seconds: float, sign: str)')
             else:
                 try:
-                    aDeg = abs(float(a[0]))
-                    aMin = abs(float(a[1]))
-                    aSec = abs(float(a[2]))
-                    aSign = str(b[3])
-                    bDeg = abs(float(b[0]))
-                    bMin = abs(float(b[1]))
-                    bSec = abs(float(b[2]))
-                    bSign = str(b[3])
+                    a_deg = abs(float(a[0]))
+                    a_min = abs(float(a[1]))
+                    a_sec = abs(float(a[2]))
+                    a_sign = str(b[3])
+                    b_deg = abs(float(b[0]))
+                    b_min = abs(float(b[1]))
+                    b_sec = abs(float(b[2]))
+                    b_sign = str(b[3])
                 except ValueError as e:
                     raise ValueError('the tuple must be like: '
                                      '(degrees: float, minutes: float, seconds: float, sign: str)') from e
                 else:
-                    a = aDeg + aMin / 60 + aSec / 3600 if 'E' == aSign else (aDeg + aMin / 60 + aSec / 3600) * -1
-                    b = bDeg + bMin / 60 + bSec / 3600 if 'E' == bSign else (bDeg + bMin / 60 + bSec / 3600) * -1
+                    a = a_deg + a_min / 60 + a_sec / 3600 if 'E' == a_sign else (a_deg + a_min / 60 + a_sec / 3600) * -1
+                    b = b_deg + b_min / 60 + b_sec / 3600 if 'E' == b_sign else (b_deg + b_min / 60 + b_sec / 3600) * -1
                     value = b - a
                     self.sign = 'E' if value > 0 else 'W'
                     value = abs(value)
@@ -492,7 +492,7 @@ class LongitudeDistance:
                 else:
                     if sign == 'E' or sign == 'W':
                         a = float(self)
-                        b = deg + mins/60 + secs/ 3600 if 'E' == sign else (deg + mins/60 + secs/ 3600) * -1
+                        b = deg + mins/60 + secs / 3600 if 'E' == sign else (deg + mins/60 + secs / 3600) * -1
 
                         return floattolongitudedistance(a+b)
                     else:

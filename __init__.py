@@ -18,7 +18,10 @@ setup(
     author_email='noe.murr@outlook.com',
     packages=['GreatCircle', 'RhumbLine'],
     scripts=['latitude.py', 'longitude.py', 'course.py', 'point.py'],
-    url='https://github.com/NoeMurr/PyNavTools'
+    url='https://github.com/NoeMurr/PyNavTools',
+    license=open('LICENSE', 'r').read(),
+    description='Simple library for navigational computing.',
+    long_description=open('README.md', 'r')
 )
 
 
