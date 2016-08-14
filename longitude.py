@@ -450,6 +450,7 @@ class LongitudeDistance:
                     degs, frac = math.modf(value)
                     mins, frac = math.modf(frac * 60)
                     secs = frac * 60
+                    self.sign = 'E' if self.sign == 'W' else 'W'
 
                 super().__setattr__('degrees', degs)
                 super().__setattr__('minutes', mins)

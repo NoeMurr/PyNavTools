@@ -35,9 +35,9 @@ class Latitude:
             except ValueError as e:
                 raise ValueError("Sign must be a string N (North) or S (South)") from e
             else:
-                if "E" == value:
+                if "N" == value:
                     super().__setattr__(key, value)
-                elif "W" == value:
+                elif "S" == value:
                     super().__setattr__(key, value)
                 else:
                     raise ValueError("Sign must be a string N (North) or S (South)")
@@ -217,7 +217,56 @@ class Latitude:
 
 class LatitudeDistance:
     def __init__(self,  a=(0, 0, 0, 'E'), b=None):
-        pass
+        self.__dict__['degrees'] = 0.0
+        self.__dict__['minutes'] = 0.0
+        self.__dict__['seconds'] = 0.0
+        self.__dict__['sign'] = 'E'
+        if type(a) == Latitude and type(b) == Latitude:
+            value = float(b) - float(a)
+            self.sign = 'N' if value > 0 else 'S'
+            self.degrees = abs(value)
+
+        elif type(a) == Latitude and type(b) == tuple:
+            try:
+                deg, mins, sec, sign = abs(float(b[0])), abs(float(b[1])), abs(float(b[2])), str(b[3])
+            except (ValueError, IndexError) as e:
+                raise ValueError('Tuple must be like (degrees, minutes, seconds, sign)') from e
+            else:
+                if sign != 'N' and sign != 'S':
+                    raise ValueError('Sign must be N North or S South')
+                b = deg + mins / 60 + sec / 3600 if 'N' == sign else (deg + mins / 60 + sec / 3600) * -1
+                value = b - float(a)
+                self.sign = 'N' if value > 0 else 'S'
+                self.degrees = abs(value)
+
+        elif type(a) == tuple and type(b) == tuple:
+            try:
+                a_deg, a_min, a_sec, a_sign = abs(float(a[0])), abs(float(a[1])), abs(float(a[2])), str(a[3])
+                b_deg, b_min, b_sec, b_sign = abs(float(b[0])), abs(float(b[1])), abs(float(b[2])), str(b[3])
+            except (ValueError, IndexError)as e:
+                raise ValueError('Tuple must be like (degrees, minutes, seconds, sign)') from e
+            else:
+                if (a_sign != 'N' and a_sign != 'S') or (b_sign != 'N' and b_sign != 'S'):
+                    raise ValueError('Sign must be N North or S South')
+
+                a = a_deg + a_min / 60 + a_sec / 3600 if 'N' == a_sign else (a_deg + a_min / 60 + a_sec / 3600) * -1
+                b = b_deg + b_min / 60 + b_sec / 3600 if 'N' == b_sign else (b_deg + b_min / 60 + b_sec / 3600) * -1
+
+                self.sign = 'N' if (b - a) > 0 else 'S'
+                self.degrees = abs(b - a)
+
+        elif type(a) == tuple and (b is None):
+            try:
+                deg, mins, sec, sign = abs(float(a[0])), abs(float(a[1])), abs(float(a[2])), str(a[3])
+            except (ValueError, IndexError) as e:
+                raise ValueError('Tuple must be like (degrees, minutes, seconds, sign)') from e
+            else:
+                if sign != 'N' and sign != 'S':
+                    raise ValueError('Sign must be N North or S South')
+                self.degrees, self.minutes, self.seconds, self.sign = deg, mins, sec, sign
+
+        else:
+            raise TypeError("Cannot make a LatitudeDistance between {} and {}".format(type(a), type(b)))
 
     def __setattr__(self, key, value):
         pass
