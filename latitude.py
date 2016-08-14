@@ -10,7 +10,9 @@ import math
 
 
 class Latitude:
-
+    """
+    class that represents the Latitude Concept i.e. the distance in Degrees between Equator and a parallel.
+    """
     def __init__(self, degrees: float = 0.0, minutes: float = 0.0, seconds: float = 0.0, sign: str = 'N'):
         """ Constructor for the class
         :type degrees:  float
@@ -200,7 +202,7 @@ class Latitude:
         elif type(other) == LatitudeDistance:
             a = float(self)
             b = float(other)
-            return floattolatitude(a-b)
+            return floattolatitude(a - b)
 
         else:
             raise TypeError("cannot sub {} with {}".format(type(self), type(other)))
@@ -216,7 +218,11 @@ class Latitude:
 
 
 class LatitudeDistance:
-    def __init__(self,  a=(0, 0, 0, 'E'), b=None):
+    """
+    class to represent the distance between two different parallels. It can be from 0 degrees to 180 degrees North or
+    South.
+    """
+    def __init__(self, a=(0, 0, 0, 'E'), b=None):
         self.__dict__['degrees'] = 0.0
         self.__dict__['minutes'] = 0.0
         self.__dict__['seconds'] = 0.0
@@ -440,6 +446,11 @@ class LatitudeDistance:
 
 
 def floattolatitude(value: float = 0.0) -> Latitude:
+    """
+    function that return a Latitude object starting from a float value
+    :param value:
+    :return:
+    """
     try:
         value = float(value)
     except ValueError as e:
@@ -451,6 +462,11 @@ def floattolatitude(value: float = 0.0) -> Latitude:
 
 
 def floattolatitudedistance(value: float = 0.0) -> LatitudeDistance:
+    """
+    function that returns the LatitudeDistance value starting from a float value
+    :param value:
+    :return:
+    """
     try:
         value = float(value)
     except ValueError as e:
@@ -459,3 +475,30 @@ def floattolatitudedistance(value: float = 0.0) -> LatitudeDistance:
         sign = 'N' if value >= 0 else 'S'
 
         return LatitudeDistance((value, 0, 0, sign))
+
+
+def meridionalpart(latitude: Latitude) -> float:
+    """
+    this function return the meridional part of a Latitude object
+    :param latitude: Latitude object
+    :return: float value of meridional part
+    """
+    if type(latitude) != Latitude:
+        raise TypeError('cannot make meridional part from {} the argument must be Latitude'.format(type(latitude)))
+    # variables:
+    sign = latitude.sign
+    latitude = math.radians(abs(float(latitude)))
+
+    # constants:
+    briggs_log_module = 0.43429
+    eccentricity_2 = 0.00672
+
+    # variables and logic operation:
+    first = 10800 / (math.pi * briggs_log_module) * \
+        math.log(math.tan(math.radians(45) + (latitude / 2)), 10)
+
+    second = (10800 / math.pi) * (eccentricity_2 * math.sin(latitude) + (1 / 3) *
+                                  (eccentricity_2 ** 2) * (math.sin(latitude) ** 3) + (1 / 5) *
+                                  (eccentricity_2 ** 4) * (math.sin(latitude) ** 5))
+
+    return round(first - second, 1) if 'N' == sign else round(first - second, 1) * -1
