@@ -46,7 +46,6 @@ class Longitude:
 
         # checking degrees value
         elif "degrees" == key:
-            print('chiamato setta gradi')
             try:
                 value = abs(float(value))
             except ValueError as e:
@@ -71,13 +70,12 @@ class Longitude:
                     if deg > 180 or (deg == 180 and (minutes > 0 or sec > 0)):
                         raise ValueError("Longitude cannot be greater than 180 degrees")
 
-                    self.__dict__['minutes'] = minutes
+                    super().__setattr__('minutes', minutes)
                     super().__setattr__('seconds', sec)
                     super().__setattr__('degrees', deg)
 
         # checking minutes value
         elif "minutes" == key:
-            print('chiamato setta minuti')
             try:
                 value = abs(float(value))
             except ValueError as e:
@@ -104,7 +102,6 @@ class Longitude:
 
         # checking minutes value
         elif "seconds" == key:
-            print('chiamato setta secondi')
             try:
                 value = abs(float(value))
             except ValueError as e:
@@ -133,11 +130,11 @@ class Longitude:
 
     def __str__(self):
         if 180 == self.degrees and 0 == self.minutes and 0 == self.seconds:
-            return "{}° {}' {}\" {}".format(int(self.degrees), int(self.minutes), int(self.seconds), 'E/W')
+            return "{}° {}' {}\" {}".format(int(self.degrees), int(self.minutes), round(self.seconds, 2), 'E/W')
         elif 0 == self.degrees and 0 == self.minutes and 0 == self.seconds:
-            return "{}° {}' {}\" {}".format(int(self.degrees), int(self.minutes), int(self.seconds), 'E/W')
+            return "{}° {}' {}\" {}".format(int(self.degrees), int(self.minutes), round(self.seconds, 2), 'E/W')
         else:
-            return "{}° {}' {}\" {}".format(int(self.degrees), int(self.minutes), int(self.seconds), self.sign)
+            return "{}° {}' {}\" {}".format(int(self.degrees), int(self.minutes), round(self.seconds, 2), self.sign)
 
     def __float__(self):
         value = self.degrees + (self.minutes/60) + (self.seconds / 3600)
@@ -555,7 +552,7 @@ class LongitudeDistance:
             raise TypeError("cannot rsub {} with {}".format(type(self), type(other)))
 
     def __str__(self):
-        return "{}° {}' {}\" {}".format(int(self.degrees), int(self.minutes), int(self.seconds), self.sign)
+        return "{}° {}' {}\" {}".format(int(self.degrees), int(self.minutes), round(self.seconds, 2), self.sign)
 
     def __float__(self):
         value = self.degrees + (self.minutes / 60) + (self.seconds / 3600)

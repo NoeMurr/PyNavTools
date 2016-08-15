@@ -124,9 +124,9 @@ class Latitude:
 
     def __str__(self):
         if 0 == self.degrees and 0 == self.minutes and 0 == self.seconds:
-            return '{}° {}\' {}" {}'.format(self.degrees, self.minutes, self.seconds, 'N/S')
+            return '{}° {}\' {}" {}'.format(int(self.degrees), int(self.minutes), round(self.seconds, 2), 'N/S')
         else:
-            return '{}° {}\' {}" {}'.format(self.degrees, self.minutes, self.seconds, self.sign)
+            return '{}° {}\' {}" {}'.format(int(self.degrees), int(self.minutes), round(self.seconds, 2), self.sign)
 
     def __float__(self):
         value = self.degrees + (self.minutes / 60) + (self.seconds / 3600)
@@ -365,9 +365,9 @@ class LatitudeDistance:
 
     def __str__(self):
         if 0 == self.degrees and 0 == self.minutes and 0 == self.seconds:
-            return '{}° {}\' {}" {}'.format(self.degrees, self.minutes, self.seconds, 'N/S')
+            return '{}° {}\' {}" {}'.format(int(self.degrees), int(self.minutes), round(self.seconds, 2), 'N/S')
         else:
-            return '{}° {}\' {}" {}'.format(self.degrees, self.minutes, self.seconds, self.sign)
+            return '{}° {}\' {}" {}'.format(int(self.degrees), int(self.minutes), round(self.seconds, 2), self.sign)
 
     def __float__(self):
         value = self.degrees + (self.minutes / 60) + (self.seconds / 3600)

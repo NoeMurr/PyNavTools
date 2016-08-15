@@ -42,6 +42,6 @@ class Point:
 
     def __str__(self):
         return 'LAT: {}° {}\' {}" {}\nLONG: {}° {}\' {}" {}'.format(self.latitude.degrees, self.latitude.minutes,
-                                                              self.latitude.seconds, self.latitude.sign,
-                                                              self.longitude.degrees, self.longitude.minutes,
-                                                              self.longitude.seconds, self.longitude.sign)
+                                                                    self.latitude.seconds, self.latitude.sign,
+                                                                    self.longitude.degrees, self.longitude.minutes,
+                                                                    self.longitude.seconds, self.longitude.sign)
