@@ -130,7 +130,7 @@ class Latitude:
 
     def __float__(self):
         value = self.degrees + (self.minutes / 60) + (self.seconds / 3600)
-        value = value if self.sign == 'E' else value * -1
+        value = value if self.sign == 'N' else value * -1
         return value
 
     def __add__(self, other):

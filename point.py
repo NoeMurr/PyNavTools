@@ -41,7 +41,4 @@ class Point:
             raise TypeError('cannot make point with types: {} {}'.format(type(latitude), type(longitude)))
 
     def __str__(self):
-        return 'LAT: {}° {}\' {}" {}\nLONG: {}° {}\' {}" {}'.format(self.latitude.degrees, self.latitude.minutes,
-                                                                    self.latitude.seconds, self.latitude.sign,
-                                                                    self.longitude.degrees, self.longitude.minutes,
-                                                                    self.longitude.seconds, self.longitude.sign)
+        return 'LAT: {}\nLONG: {}'.format(str(self.latitude), str(self.longitude))

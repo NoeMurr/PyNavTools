@@ -13,5 +13,5 @@ setup(
     url='https://github.com/NoeMurr/PyNavTools',
     license=open('LICENSE', 'r').read(),
     description='Simple library for navigational computing.',
-    long_description=open('README.md', 'r')
+    long_description=open('README.md', 'r').read()
 )
