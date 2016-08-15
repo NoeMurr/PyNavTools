@@ -1,15 +1,7 @@
-##############################################################################
-#
-# @author:  Noè Murr
-# @file:    __init__.py
-# @brief:   simple init file for PyNavTools module.
-#
-##############################################################################
-
-# necessary modules.
-
-# math is necessary for navigation calculation.
 from distutils.core import setup
+
+__all__ = ['Latitude', 'LatitudeDistance', 'Longitude', 'LongitudeDistance', 'floattolatitude',
+           'floattolatitudedistance', 'floattolongitude', 'floattolongitudedistance', 'meridionalpart']
 
 setup(
     name='PyNavTools',
@@ -23,5 +15,3 @@ setup(
     description='Simple library for navigational computing.',
     long_description=open('README.md', 'r')
 )
-
-

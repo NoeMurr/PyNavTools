@@ -1,11 +1,3 @@
-##############################################################################
-#
-# @author:  Noè Murr
-# @file:    latitude.py
-# @brief:   contains definition of Latitude.
-#
-##############################################################################
-
 import math
 
 
@@ -24,11 +16,17 @@ class Latitude:
         self.__dict__['degrees'] = 0.0
         self.__dict__['minutes'] = 0.0
         self.__dict__['seconds'] = 0.0
+
+        # to avoid warnings I define the attributes with self
+        self.degrees = 0.0
+        self.minutes = 0.0
+        self.seconds = 0.0
+
         self.sign = sign
 
-        self.degrees = degrees
-        self.minutes = minutes
-        self.seconds = seconds
+        self.degrees += degrees
+        self.minutes += minutes
+        self.seconds += seconds
 
     def __setattr__(self, key, value):
         if 'sign' == key:
@@ -55,8 +53,8 @@ class Latitude:
                 elif 90 == value and (self.minutes > 0 or self.seconds > 0):
                     raise ValueError("Latitude cannot be greater than 90 degrees")
                 else:
-                    deg, frac = math.modf(value)
-                    minutes, frac = math.modf(self.minutes + (frac * 60))
+                    frac, deg = math.modf(value)
+                    frac, minutes = math.modf(self.minutes + (frac * 60))
 
                     sec = self.seconds + (frac * 60)
 
@@ -80,7 +78,7 @@ class Latitude:
                 raise ValueError("minutes must be a numerical value") from e
             else:
                 degs = self.degrees
-                mins, frac = math.modf(value)
+                frac, mins = math.modf(value)
                 secs = self.seconds + (frac * 60)
 
                 if secs >= 60:
@@ -297,8 +295,8 @@ class LatitudeDistance:
                 elif 180 == value and (self.minutes > 0 or self.seconds > 0):
                     raise ValueError('Latitude distance cannot be greater than 180 degrees')
                 else:
-                    deg, frac = math.modf(value)
-                    mins, frac = math.modf(self.minutes + (frac * 60))
+                    frac, deg = math.modf(value)
+                    frac, mins = math.modf(self.minutes + (frac * 60))
                     sec = self.seconds + (frac * 60)
 
                     mins += sec // 60
@@ -320,7 +318,7 @@ class LatitudeDistance:
             except ValueError as e:
                 raise ValueError("minutes must be a numerical value") from e
             else:
-                mins, frac = math.modf(value)
+                frac, mins = math.modf(value)
                 secs = self.seconds + (frac * 60)
                 degs = self.degrees
 

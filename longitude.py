@@ -1,11 +1,3 @@
-##############################################################################
-#
-# @author:  Noè Murr
-# @file:    longitude.py
-# @brief:   contains the definition of Longitude class.
-#
-##############################################################################
-
 import math
 
 
@@ -23,11 +15,17 @@ class Longitude:
         self.__dict__['degrees'] = 0.0
         self.__dict__['minutes'] = 0.0
         self.__dict__['seconds'] = 0.0
+
+        # to avoid warnings I define the attributes with self
+        self.degrees = 0.0
+        self.minutes = 0.0
+        self.seconds = 0.0
+
         self.sign = sign
 
-        self.degrees = degrees
-        self.minutes = minutes
-        self.seconds = seconds
+        self.degrees += degrees
+        self.minutes += minutes
+        self.seconds += seconds
 
     def __setattr__(self, key, value):
         """ Assign operator for checking variable """
@@ -48,6 +46,7 @@ class Longitude:
 
         # checking degrees value
         elif "degrees" == key:
+            print('chiamato setta gradi')
             try:
                 value = abs(float(value))
             except ValueError as e:
@@ -58,8 +57,8 @@ class Longitude:
                 elif 180 == value and (self.minutes > 0 or self.seconds > 0):
                     raise ValueError("Longitude cannot be greater than 180 degrees")
                 else:
-                    deg, frac = math.modf(value)
-                    minutes, frac = math.modf(self.minutes + (frac * 60))
+                    frac, deg = math.modf(value)
+                    frac, minutes = math.modf(self.minutes + (frac * 60))
 
                     sec = self.seconds + (frac * 60)
 
@@ -71,20 +70,21 @@ class Longitude:
 
                     if deg > 180 or (deg == 180 and (minutes > 0 or sec > 0)):
                         raise ValueError("Longitude cannot be greater than 180 degrees")
-                    else:
-                        super().__setattr__('degrees', deg)
-                        super().__setattr__('minutes', minutes)
-                        super().__setattr__('seconds', sec)
+
+                    self.__dict__['minutes'] = minutes
+                    super().__setattr__('seconds', sec)
+                    super().__setattr__('degrees', deg)
 
         # checking minutes value
         elif "minutes" == key:
+            print('chiamato setta minuti')
             try:
                 value = abs(float(value))
             except ValueError as e:
                 raise ValueError("minutes must be a numerical value") from e
             else:
                 degs = self.degrees
-                mins, frac = math.modf(value)
+                frac, mins = math.modf(value)
                 secs = self.seconds + (frac * 60)
 
                 if secs >= 60:
@@ -104,6 +104,7 @@ class Longitude:
 
         # checking minutes value
         elif "seconds" == key:
+            print('chiamato setta secondi')
             try:
                 value = abs(float(value))
             except ValueError as e:
@@ -378,8 +379,8 @@ class LongitudeDistance:
                     super().__setattr__("minutes", float(int((value - self.degrees) * 60)))
                     super().__setattr__("seconds", float((((value - self.degrees) * 60) - self.minutes) * 60))
                 else:
-                    deg, frac = math.modf(value)
-                    minutes, frac = math.modf(self.minutes + (frac * 60))
+                    frac, deg = math.modf(value)
+                    frac, minutes = math.modf(self.minutes + (frac * 60))
 
                     sec = self.seconds + (frac * 60)
 
@@ -406,7 +407,7 @@ class LongitudeDistance:
             except ValueError as e:
                 raise ValueError("minutes must be a numerical value") from e
             else:
-                mins, frac = math.modf(value)
+                frac, mins = math.modf(value)
                 secs = self.seconds + (frac * 60)
                 degs = self.degrees
                 if secs > 60:
@@ -420,8 +421,8 @@ class LongitudeDistance:
                 if degs > 360 or (360 == degs and (mins > 0 or secs > 0)):
                     value = degs + mins / 60 + secs / 3600
                     value = 360 - value
-                    degs, frac = math.modf(value)
-                    mins, frac = math.modf(frac * 60)
+                    frac, degs = math.modf(value)
+                    frac, mins = math.modf(frac * 60)
                     secs = frac * 60
 
                 super().__setattr__('degrees', degs)
@@ -447,8 +448,8 @@ class LongitudeDistance:
                 if degs > 360 or (360 == degs and (mins > 0 or secs > 0)):
                     value = degs + mins / 60 + secs / 3600
                     value = 360 - value
-                    degs, frac = math.modf(value)
-                    mins, frac = math.modf(frac * 60)
+                    frac, degs = math.modf(value)
+                    frac, mins = math.modf(frac * 60)
                     secs = frac * 60
                     self.sign = 'E' if self.sign == 'W' else 'W'
 
