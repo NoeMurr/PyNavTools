@@ -169,7 +169,7 @@ class Longitude:
                 return self.__add__(other)
         elif type(other) == LongitudeDistance:
             result = float(self) + float(other)
-            return floattolongitude(result)
+            return float_to_longitude(result)
 
         else:
             if type(other) == tuple:
@@ -210,7 +210,7 @@ class Longitude:
 
         elif type(other) == LongitudeDistance:
             result = float(self) - float(other)
-            return floattolongitude(result)
+            return float_to_longitude(result)
 
         else:
             if type(other) == tuple:
@@ -248,6 +248,10 @@ class LongitudeDistance:
         self.__dict__['minutes'] = 0.0
         self.__dict__['seconds'] = 0.0
         self.__dict__['sign'] = 'E'
+        self.degrees = 0.0
+        self.minutes = 0.0
+        self.seconds = 0.0
+        self.sign = 'E'
         if type(a) == Longitude and type(b) == Longitude:
             value = float(b) - float(a)
             self.sign = 'E' if value > 0 else 'W'
@@ -341,9 +345,9 @@ class LongitudeDistance:
                     raise ValueError('the tuple must be like:'
                                      ' (degrees: float, minutes: float, seconds: float, sign: str)') from e
                 else:
-                    self.degrees = deg
-                    self.minutes = mins
-                    self.seconds = sec
+                    self.degrees += deg
+                    self.minutes += mins
+                    self.seconds += sec
                     self.sign = sign
 
         else:
@@ -469,7 +473,7 @@ class LongitudeDistance:
             b = float(other)
             value = a + b
 
-            return floattolongitudedistance(value)
+            return float_to_longitude_distance(value)
 
         elif type(other) == tuple:
             if len(other) == 4:
@@ -485,7 +489,7 @@ class LongitudeDistance:
                         a = float(self)
                         b = deg + mins/60 + secs / 3600 if 'E' == sign else (deg + mins/60 + secs / 3600) * -1
 
-                        return floattolongitudedistance(a+b)
+                        return float_to_longitude_distance(a + b)
                     else:
                         raise ValueError('sign of tuple must be E or W')
             else:
@@ -496,7 +500,7 @@ class LongitudeDistance:
             b = float(other)
             value = a + b
 
-            return floattolongitudedistance(value)
+            return float_to_longitude_distance(value)
 
         else:
             raise TypeError("cannot sum {} with {}".format(type(self), type(other)))
@@ -514,7 +518,7 @@ class LongitudeDistance:
         if type(other) == type(self):
             a = float(self)
             b = float(other)
-            return floattolongitudedistance(a-b)
+            return float_to_longitude_distance(a - b)
 
         elif type(other) == tuple:
             if len(other) == 4:
@@ -529,7 +533,7 @@ class LongitudeDistance:
                     a = float(self)
                     b = deg + mins / 60 + secs / 3600 if 'E' == sign else (deg + mins / 60 + secs / 3600) * -1
 
-                    return floattolongitudedistance(a - b)
+                    return float_to_longitude_distance(a - b)
             else:
                 raise ValueError('tuple must be like (degrees, minutes, seconds,sign)')
 
@@ -537,7 +541,7 @@ class LongitudeDistance:
             a = float(self)
             b = float(other)
 
-            return floattolongitudedistance(a-b)
+            return float_to_longitude_distance(a - b)
 
         else:
             raise TypeError("cannot sub {} with {}".format(type(self), type(other)))
@@ -560,7 +564,7 @@ class LongitudeDistance:
         return value
 
 
-def floattolongitude(x: float = 0.0) -> Longitude:
+def float_to_longitude(x: float = 0.0) -> Longitude:
     try:
         x = float(x)
     except ValueError as e:
@@ -574,7 +578,7 @@ def floattolongitude(x: float = 0.0) -> Longitude:
         return Longitude(degrees=abs(x), sign=sign)
 
 
-def floattolongitudedistance(x: float = 0.0) -> LongitudeDistance:
+def float_to_longitude_distance(x: float = 0.0) -> LongitudeDistance:
     try:
         x = float(x)
     except ValueError as e:

@@ -159,10 +159,10 @@ class Latitude:
                 return self.__add__(other)
 
         elif type(other) == LatitudeDistance:
-            return floattolatitude(float(self) + float(other))
+            return float_to_latitude(float(self) + float(other))
 
         else:
-            raise TypeError('cannot sum Longitude with {}'.format(type(other)))
+            raise TypeError('cannot sum Latitude with {}'.format(type(other)))
 
     def __radd__(self, other):
         return self.__add__(other)
@@ -200,7 +200,7 @@ class Latitude:
         elif type(other) == LatitudeDistance:
             a = float(self)
             b = float(other)
-            return floattolatitude(a - b)
+            return float_to_latitude(a - b)
 
         else:
             raise TypeError("cannot sub {} with {}".format(type(self), type(other)))
@@ -224,7 +224,13 @@ class LatitudeDistance:
         self.__dict__['degrees'] = 0.0
         self.__dict__['minutes'] = 0.0
         self.__dict__['seconds'] = 0.0
-        self.__dict__['sign'] = 'E'
+        self.__dict__['sign'] = 'N'
+
+        self.degrees = 0.0
+        self.minutes = 0.0
+        self.seconds = 0.0
+        self.sign = 'N'
+
         if type(a) == Latitude and type(b) == Latitude:
             value = float(b) - float(a)
             self.sign = 'N' if value > 0 else 'S'
@@ -267,7 +273,10 @@ class LatitudeDistance:
             else:
                 if sign != 'N' and sign != 'S':
                     raise ValueError('Sign must be N North or S South')
-                self.degrees, self.minutes, self.seconds, self.sign = deg, mins, sec, sign
+                self.degrees += deg
+                self.minutes += mins
+                self.seconds += sec
+                self.sign = sign
 
         else:
             raise TypeError("Cannot make a LatitudeDistance between {} and {}".format(type(a), type(b)))
@@ -371,7 +380,7 @@ class LatitudeDistance:
 
     def __float__(self):
         value = self.degrees + (self.minutes / 60) + (self.seconds / 3600)
-        return value if self.sign == 'E' else value * -1
+        return value if self.sign == 'N' else value * -1
 
     def __add__(self, other):
         """
@@ -381,10 +390,10 @@ class LatitudeDistance:
         :return: LatitudeDistance type
         """
         if type(self) == type(other):
-            return floattolatitudedistance(float(other) + float(self))
+            return float_to_latitude_distance(float(other) + float(self))
 
         elif type(other) == Latitude:
-            return floattolatitudedistance(float(other) + float(self))
+            return float_to_latitude_distance(float(other) + float(self))
 
         elif type(other) == tuple:
             if len(other) != 4:
@@ -398,7 +407,7 @@ class LatitudeDistance:
                     if d != 'N' and d != 'S':
                         raise ValueError('Sign must be N north or S south')
                     other = a + b / 60 + c / 3600 if 'N' == d else (a + b / 60 + c / 3600) * -1
-                    return floattolatitudedistance(float(self) + other)
+                    return float_to_latitude_distance(float(self) + other)
 
     def __radd__(self, other):
         return self.__add__(other)
@@ -411,10 +420,10 @@ class LatitudeDistance:
         :return: LatitudeDistance object
         """
         if type(other) == type(self):
-            return floattolatitudedistance(float(self) - float(other))
+            return float_to_latitude_distance(float(self) - float(other))
 
         elif type(other) == Latitude:
-            return floattolatitudedistance(float(self) - float(other))
+            return float_to_latitude_distance(float(self) - float(other))
 
         elif type(other) == tuple:
             if len(other) != 4:
@@ -428,7 +437,7 @@ class LatitudeDistance:
                     if d != 'N' and d != 'S':
                         raise ValueError('Sign must be N north or S south')
                     other = a + b / 60 + c / 3600 if 'N' == d else (a + b / 60 + c / 3600) * -1
-                    return floattolatitudedistance(float(self) - other)
+                    return float_to_latitude_distance(float(self) - other)
 
     def __rsub__(self, other):
         if type(other) == tuple:
@@ -443,7 +452,7 @@ class LatitudeDistance:
                     return LatitudeDistance((a, b, c, d)).__sub__(self)
 
 
-def floattolatitude(value: float = 0.0) -> Latitude:
+def float_to_latitude(value: float = 0.0) -> Latitude:
     """
     function that return a Latitude object starting from a float value
     :param value:
@@ -459,7 +468,7 @@ def floattolatitude(value: float = 0.0) -> Latitude:
         return Latitude(degrees=abs(value), sign=sign)
 
 
-def floattolatitudedistance(value: float = 0.0) -> LatitudeDistance:
+def float_to_latitude_distance(value: float = 0.0) -> LatitudeDistance:
     """
     function that returns the LatitudeDistance value starting from a float value
     :param value:
@@ -475,7 +484,7 @@ def floattolatitudedistance(value: float = 0.0) -> LatitudeDistance:
         return LatitudeDistance((value, 0, 0, sign))
 
 
-def meridionalpart(latitude: Latitude) -> float:
+def meridional_part(latitude: Latitude) -> float:
     """
     this function return the meridional part of a Latitude object
     :param latitude: Latitude object
