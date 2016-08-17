@@ -1,4 +1,13 @@
 from point import *
+from enum import Enum
+
+
+class WpMode(Enum):
+    """
+    enumeration that is necessary to represents the various different ways to make a way point: equal difference of
+    longitude compared to vertex of the GreatCircle, or equal difference of longitude compared to starting point
+    """
+    pass
 
 
 class RhumbLine:
@@ -7,6 +16,14 @@ class RhumbLine:
     take to arrive from point A to point B, the point A of departure and the point B of arrival.
     """
     def __init__(self, point_a: Point = Point(), point_b: Point = None, miles: float = None, cog: float = None):
+        """
+        simple constructor of RhumbLine class, you can make a rhumb line with starting and arrival point or with
+        starting point, routes to follow and distance to tread
+        :param point_a: starting point
+        :param point_b: arrival point
+        :param miles: distance to tread
+        :param cog: route to follow
+        """
         if point_b is not None and (miles is not None or cog is not None):
             raise AttributeError('Cannot make rhumb line with both arrival point, miles and cog')
         elif point_b is None and(miles is None or cog is None):
@@ -22,6 +39,10 @@ class RhumbLine:
             self.point_b = calc_arrival_point(self.point_a, miles, cog)
 
     def __str__(self):
+        """
+        method that permits to print on screen a simple representation of the Rhumb line route.
+        :return:
+        """
         course = self.course()
         fractional, c_deg = math.modf(course)
         fractional, c_min = math.modf((fractional * 60))
@@ -66,34 +87,66 @@ class RhumbLine:
                              b_spaces_1=b_spaces_1, miles=distance, b_spaces_2=b_spaces_2)
 
     def course(self) -> float:
+        """
+        method that returns the route to follow for arrive from point_a to point_b.
+        :return : float value representing the route.
+        """
         diff_long = self.point_b.longitude - self.point_a.longitude
         diff_lat = self.point_b.latitude - self.point_a.latitude
-        diff_meridional_part = meridional_part(self.point_b.latitude) - meridional_part(self.point_a.latitude)
-        course = abs(round(math.degrees(math.atan((float(diff_long) * 60) / diff_meridional_part)), 5))
-
-        if 'N' == diff_lat.sign and 'E' == diff_long.sign:
-            return course
-        elif 'N' == diff_lat.sign and 'W' == diff_long.sign:
-            return 360 - course
-        elif 'S' == diff_lat.sign and 'E' == diff_long.sign:
-            return 180 - course
+        if float(diff_long) == 0 and float(diff_lat) == 0:
+            return 0
+        elif float(diff_lat) == 0:
+            if diff_long.sign == 'E':
+                return 90
+            else:
+                return 270
+        elif float(diff_long) == 0:
+            if diff_lat.sign == 'N':
+                return 0
+            else:
+                return 180
         else:
-            return 180 + course
+            diff_meridional_part = meridional_part(self.point_b.latitude) - meridional_part(self.point_a.latitude)
+            course = abs(round(math.degrees(math.atan((float(diff_long) * 60) / diff_meridional_part)), 5))
+
+            if 'N' == diff_lat.sign and 'E' == diff_long.sign:
+                return course
+            elif 'N' == diff_lat.sign and 'W' == diff_long.sign:
+                return 360 - course
+            elif 'S' == diff_lat.sign and 'E' == diff_long.sign:
+                return 180 - course
+            else:
+                return 180 + course
 
     def distance(self) -> float:
+        """
+        method that returns the nautical miles that is necessary to tread to arrive from point_a to point_b.
+        :return : nautical miles to tread from point_a to point_b following self.course() route
+        """
         course = self.course()
 
-        if (80 < course < 100) or (260 < course < 280):
+        if 90 == course or 270 == course:
+            diff_long = float(self.point_b.longitude - self.point_a.longitude) * 60
+            return abs(round(diff_long * math.cos(math.radians(float(self.point_a.latitude))), 2))
+
+        elif 0 == course or 180 == course:
+            diff_lat = float(self.point_b.latitude - self.point_a.latitude) * 60
+            return abs(round(diff_lat, 2))
+
+        elif (80 < course < 100) or (260 < course < 280):
             diff_long = float(self.point_b.longitude - self.point_a.longitude) * 60
             average_lat = (float(self.point_a.latitude) + float(self.point_b.latitude)) / 2
-            return round((diff_long * math.cos(math.radians(average_lat))) / math.sin(math.radians(course)), 2)
+            return abs(round((diff_long * math.cos(math.radians(average_lat))) / math.sin(math.radians(course)), 2))
+
         else:
             diff_lat = float(self.point_b.latitude - self.point_a.latitude) * 60
-            return round(diff_lat / math.cos(math.radians(course)), 2)
+            return abs(round(diff_lat / math.cos(math.radians(course)), 2))
 
 
 class GreatCircle:
-    pass
+    # TODO finish WpMode and set default
+    def __init__(self, point_a: Point, point_b: Point, wp_number: int = 10, wp_mode: WpMode = None):
+        pass
 
 
 class Composite:
@@ -101,16 +154,40 @@ class Composite:
 
 
 def calc_arrival_point(point_a: Point = Point(), miles: float = 0.0, cog: float = 0.0) -> Point:
-    if type(point_a) != Point or type(miles) != float or type(cog) != float:
-        raise TypeError('cannot make arrival point with: {}, {}, {}'.format(type(point_a), type(miles), type(cog)))
+    """
+    Function that calculates the arrival point, starting from point_a following the route (cog) for 'miles' miles.
+    :param point_a: starting point
+    :param miles: distance to tread
+    :param cog: route to follow
+    :return: Point of arrival.
+    """
+    try:
+        miles, cog = float(miles), float(cog)
+    except ValueError as e:
+        raise TypeError('miles and cog must be numerical value') from e
+    if type(point_a) != Point:
+        raise TypeError('starting point cannot be of type: {}'.format(type(point_a)))
     else:
-        diff_lat = float_to_latitude_distance((miles * math.cos(math.radians(cog))) / 60)
-        lat_b = point_a.latitude + diff_lat
+        if 90 == cog or 270 == cog:
+            diff_long = float_to_longitude_distance((miles / math.cos(math.radians(float(point_a.latitude)))) / 60)
+            diff_long.sign = 'E' if 90 == cog else 'W'
+            lat_b = point_a.latitude
+            long_b = point_a.longitude + diff_long
 
-        diff_meridional_parts = meridional_part(lat_b) - meridional_part(point_a.latitude)
+        elif 0 == cog or 180 == cog:
+            diff_lat = float_to_latitude_distance(miles / 60)
+            diff_lat.sign = 'N' if 0 == cog else 'S'
+            lat_b = point_a.latitude + diff_lat
+            long_b = point_a.longitude
 
-        diff_long = float_to_longitude_distance((diff_meridional_parts * math.tan(math.radians(cog))) / 60)
+        else:
+            diff_lat = float_to_latitude_distance((miles * math.cos(math.radians(cog))) / 60)
+            lat_b = point_a.latitude + diff_lat
 
-        long_b = point_a.longitude + diff_long
+            diff_meridional_parts = meridional_part(lat_b) - meridional_part(point_a.latitude)
+
+            diff_long = float_to_longitude_distance((diff_meridional_parts * math.tan(math.radians(cog))) / 60)
+
+            long_b = point_a.longitude + diff_long
 
         return Point(lat_b, long_b)
