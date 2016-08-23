@@ -183,7 +183,15 @@ class GreatCircle:
             pass  # TODO return the number way point or in case of out of bound wp return index out of bound error
 
     def vertex(self) -> Point:
-        pass  # TODO return the vertex point of the great circle route
+        # TODO debug this shit!!!!!
+        lat_a, course = abs(float(self.point_a.latitude)), self.course()
+        long_a = float(self.point_a.longitude)
+        lat_v = float_to_latitude(round(math.degrees(math.acos(math.cos(math.radians(lat_a)) * math.sin(
+            math.radians(course)))), 5))
+        long_v = float_to_longitude(long_a + round(math.degrees(math.atan((1/math.tan(course)) /
+                                                                          math.sin(math.radians(lat_a)))), 5))
+
+        return Point(lat_v, long_v)
 
     def distance(self):
         diff_long = float(self.point_b.longitude - self.point_a.longitude)
@@ -191,8 +199,8 @@ class GreatCircle:
         lat_b = float(self.point_b.latitude)
 
         distance = round(math.sin(math.radians(lat_a)), 5) * round(math.sin(math.radians(lat_b)), 5) + \
-                   round(math.cos(math.radians(lat_a)), 5) * round(math.cos(math.radians(lat_b)), 5) * \
-                   round(math.cos(math.radians(diff_long)), 5)
+            round(math.cos(math.radians(lat_a)), 5) * round(math.cos(math.radians(lat_b)), 5) * \
+            round(math.cos(math.radians(diff_long)), 5)
 
         return round(math.degrees(math.acos(distance)) * 60, 5)
 
