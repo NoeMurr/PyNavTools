@@ -1,5 +1,6 @@
 from point import *
 from enum import Enum
+import math
 
 
 class WpMode(Enum):
@@ -7,7 +8,8 @@ class WpMode(Enum):
     enumeration that is necessary to represents the various different ways to make a way point: equal difference of
     longitude compared to vertex of the GreatCircle, or equal difference of longitude compared to starting point
     """
-    pass
+    equal_distance = 0
+    equal_difference_of_longitude = 1
 
 
 class RhumbLine:
@@ -15,6 +17,7 @@ class RhumbLine:
     Represents the rhumb line navigation concept. It contains the distance between two points, the course that must
     take to arrive from point A to point B, the point A of departure and the point B of arrival.
     """
+
     def __init__(self, point_a: Point = Point(), point_b: Point = None, miles: float = None, cog: float = None):
         """
         simple constructor of RhumbLine class, you can make a rhumb line with starting and arrival point or with
@@ -26,7 +29,7 @@ class RhumbLine:
         """
         if point_b is not None and (miles is not None or cog is not None):
             raise AttributeError('Cannot make rhumb line with both arrival point, miles and cog')
-        elif point_b is None and(miles is None or cog is None):
+        elif point_b is None and (miles is None or cog is None):
             raise AttributeError('cannot calculate the arrival point without miles or cog')
         elif point_b is not None:
             if type(point_a) != Point or type(point_b) != Point:
@@ -67,7 +70,7 @@ class RhumbLine:
 
         # making separators
         c_spaces = ' ' * (max(len(str(lat_a)), len(str(lat_a))) + 1)
-        c_separator = '-' * (max(len(course)+4, len(distance)+6)) + '-----> To:|'
+        c_separator = '-' * (max(len(course) + 4, len(distance) + 6)) + '-----> To:|'
         tot = len(c_spaces) + len(c_separator)
         t_spaces_1 = ' ' * ((len(c_spaces) + 2) - len(str(lat_a)))
         t_spaces_2 = ' ' * (tot - (len(t_spaces_1) + len(str(lat_a)) + len(course) + 4) - 2)
@@ -144,9 +147,54 @@ class RhumbLine:
 
 
 class GreatCircle:
-    # TODO finish WpMode and set default
-    def __init__(self, point_a: Point, point_b: Point, wp_number: int = 10, wp_mode: WpMode = None):
-        pass
+    def __init__(self, point_a: Point, point_b: Point, wp_number: int = 10, wp_mode: WpMode = WpMode.equal_distance):
+        # TODO finish this __init__
+        self.point_a = point_a
+        self.point_b = point_b
+        self.wp_number = wp_number
+        self.wp_mode = wp_mode
+
+    def course(self, start_wp: int = None):
+        if start_wp is None:
+            diff_long = self.point_b.longitude - self.point_a.longitude
+            diff_lat = self.point_b.latitude - self.point_a.latitude
+            route = math.degrees(math.atan(round(math.sin(math.radians(float(diff_long))), 5) /
+                                           (round(math.tan(math.radians(float(self.point_b.latitude))) *
+                                                  math.cos(math.radians(float(self.point_a.latitude))), 5) -
+                                            round((math.sin(math.radians(float(self.point_a.latitude))) *
+                                                   math.cos(math.radians(float(diff_long)))), 5))))
+
+            if 'N' == diff_lat.sign and 'E' == diff_long.sign:
+                return round(route, 5)
+            elif 'S' == diff_lat.sign and 'E' == diff_long.sign:
+                return round(180 - route, 5)
+            elif 'S' == diff_lat.sign and 'W' == diff_long.sign:
+                return round(180 + route, 5)
+            else:
+                return round(360 - route, 5)
+
+        else:
+            pass  # return Rhumb Line object containing the route from start_wp to next one
+
+    def wp(self, number: int = None):
+        if number is None:
+            pass  # TODO return list of all way points
+        else:
+            pass  # TODO return the number way point or in case of out of bound wp return index out of bound error
+
+    def vertex(self) -> Point:
+        pass  # TODO return the vertex point of the great circle route
+
+    def distance(self):
+        diff_long = float(self.point_b.longitude - self.point_a.longitude)
+        lat_a = float(self.point_a.latitude)
+        lat_b = float(self.point_b.latitude)
+
+        distance = round(math.sin(math.radians(lat_a)), 5) * round(math.sin(math.radians(lat_b)), 5) + \
+                   round(math.cos(math.radians(lat_a)), 5) * round(math.cos(math.radians(lat_b)), 5) * \
+                   round(math.cos(math.radians(diff_long)), 5)
+
+        return round(math.degrees(math.acos(distance)) * 60, 5)
 
 
 class Composite:

@@ -7,7 +7,6 @@ class Point:
     Class that represents the concept of point on the heart. It has a latitude and a longitude.
     """
     def __init__(self, latitude=Latitude(), longitude=Longitude()):
-        #  TODO finish __init__ method
         if type(latitude) == Latitude and type(longitude) == Longitude:
             self.latitude, self.longitude = latitude, longitude
         elif type(latitude) == tuple and type(longitude) == Longitude:
