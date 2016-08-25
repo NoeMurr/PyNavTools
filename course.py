@@ -12,6 +12,13 @@ class WpMode(Enum):
     equal_difference_of_longitude = 1
 
 
+class CourseType(Enum):
+    """
+    enumeration that represents the type of course: quadrantal, or circular
+    """
+    circular = 0
+    quadrantal = 1
+
 class RhumbLine:
     """
     Represents the rhumb line navigation concept. It contains the distance between two points, the course that must
@@ -89,7 +96,7 @@ class RhumbLine:
                              cog=course, c_spaces=c_spaces, c_sep=c_separator,
                              b_spaces_1=b_spaces_1, miles=distance, b_spaces_2=b_spaces_2)
 
-    def course(self) -> float:
+    def course(self, course_type: CourseType = CourseType.circular) -> float:
         """
         method that returns the route to follow for arrive from point_a to point_b.
         :return : float value representing the route.
@@ -112,14 +119,17 @@ class RhumbLine:
             diff_meridional_part = meridional_part(self.point_b.latitude) - meridional_part(self.point_a.latitude)
             course = abs(round(math.degrees(math.atan((float(diff_long) * 60) / diff_meridional_part)), 5))
 
-            if 'N' == diff_lat.sign and 'E' == diff_long.sign:
-                return course
-            elif 'N' == diff_lat.sign and 'W' == diff_long.sign:
-                return 360 - course
-            elif 'S' == diff_lat.sign and 'E' == diff_long.sign:
-                return 180 - course
+            if course_type == CourseType.quadrantal:
+                return course;
             else:
-                return 180 + course
+                if 'N' == diff_lat.sign and 'E' == diff_long.sign:
+                    return course
+                elif 'N' == diff_lat.sign and 'W' == diff_long.sign:
+                    return 360 - course
+                elif 'S' == diff_lat.sign and 'E' == diff_long.sign:
+                    return 180 - course
+                else:
+                    return 180 + course
 
     def distance(self) -> float:
         """
@@ -154,7 +164,7 @@ class GreatCircle:
         self.wp_number = wp_number
         self.wp_mode = wp_mode
 
-    def course(self, start_wp: int = None):
+    def course(self, start_wp: int = None, course_type: CourseType = CourseType.circular ):
         if start_wp is None:
             diff_long = self.point_b.longitude - self.point_a.longitude
             diff_lat = self.point_b.latitude - self.point_a.latitude
@@ -163,15 +173,18 @@ class GreatCircle:
                                                   math.cos(math.radians(float(self.point_a.latitude))), 5) -
                                             round((math.sin(math.radians(float(self.point_a.latitude))) *
                                                    math.cos(math.radians(float(diff_long)))), 5))))
-
-            if 'N' == diff_lat.sign and 'E' == diff_long.sign:
+            if course_type == CourseType.quadrantal:
                 return round(route, 5)
-            elif 'S' == diff_lat.sign and 'E' == diff_long.sign:
-                return round(180 - route, 5)
-            elif 'S' == diff_lat.sign and 'W' == diff_long.sign:
-                return round(180 + route, 5)
+
             else:
-                return round(360 - route, 5)
+                if 'N' == diff_lat.sign and 'E' == diff_long.sign:
+                    return round(route, 5)
+                elif 'S' == diff_lat.sign and 'E' == diff_long.sign:
+                    return round(180 - route, 5)
+                elif 'S' == diff_lat.sign and 'W' == diff_long.sign:
+                    return round(180 + route, 5)
+                else:
+                    return round(360 - route, 5)
 
         else:
             pass  # return Rhumb Line object containing the route from start_wp to next one
@@ -183,13 +196,13 @@ class GreatCircle:
             pass  # TODO return the number way point or in case of out of bound wp return index out of bound error
 
     def vertex(self) -> Point:
-        # TODO debug this shit!!!!!
-        lat_a, course = abs(float(self.point_a.latitude)), self.course()
-        long_a = float(self.point_a.longitude)
+        # TODO debug longitude of this shit!!!!!
+        lat_a, course = abs(float(self.point_a.latitude)), self.course(course_type=CourseType.quadrantal)
+        long_a = self.point_a.longitude
         lat_v = float_to_latitude(round(math.degrees(math.acos(math.cos(math.radians(lat_a)) * math.sin(
             math.radians(course)))), 5))
-        long_v = float_to_longitude(long_a + round(math.degrees(math.atan((1/math.tan(course)) /
-                                                                          math.sin(math.radians(lat_a)))), 5))
+        long_v = long_a + float_to_longitude_distance(round(math.degrees(math.atan((1/math.tan(course)) /
+                                                                                   math.sin(math.radians(lat_a)))), 5))
 
         return Point(lat_v, long_v)
 
