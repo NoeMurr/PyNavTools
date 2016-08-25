@@ -19,6 +19,7 @@ class CourseType(Enum):
     circular = 0
     quadrantal = 1
 
+
 class RhumbLine:
     """
     Represents the rhumb line navigation concept. It contains the distance between two points, the course that must
@@ -120,7 +121,7 @@ class RhumbLine:
             course = abs(round(math.degrees(math.atan((float(diff_long) * 60) / diff_meridional_part)), 5))
 
             if course_type == CourseType.quadrantal:
-                return course;
+                return course
             else:
                 if 'N' == diff_lat.sign and 'E' == diff_long.sign:
                     return course
@@ -164,7 +165,7 @@ class GreatCircle:
         self.wp_number = wp_number
         self.wp_mode = wp_mode
 
-    def course(self, start_wp: int = None, course_type: CourseType = CourseType.circular ):
+    def course(self, start_wp: int = None, course_type: CourseType = CourseType.circular):
         if start_wp is None:
             diff_long = self.point_b.longitude - self.point_a.longitude
             diff_lat = self.point_b.latitude - self.point_a.latitude
